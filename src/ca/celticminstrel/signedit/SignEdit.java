@@ -4,10 +4,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import net.minecraft.server.EntityPlayer;
+import net.minecraft.server.Packet130UpdateSign;
+import net.minecraft.server.Packet53BlockChange;
+import net.minecraft.server.WorldServer;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
 import org.bukkit.event.block.BlockCanBuildEvent;
@@ -25,10 +32,12 @@ public class SignEdit extends JavaPlugin {
         private final Block target;
         private final Block source;
         private String[] lines;
+        private Player setter;
 
-        private SignUpdater(Block target, Block source) {
+        private SignUpdater(Block target, Block source, Player who) {
             this.target = target;
             this.source = source;
+            this.setter = who;
         }
         
         private SignUpdater setLines(String[] newLines) {
@@ -51,6 +60,17 @@ public class SignEdit extends JavaPlugin {
                 //logger.info("R[" + i + "] = \"" + targetState.getLine(i) + "\"");
             }
             source.setType(Material.AIR);
+            int i = target.getX(), j = target.getY(), k = target.getZ();
+            // This line updates the sign for the user.
+            ((EntityPlayer) ((CraftPlayer) setter).getHandle()).a.b(new Packet130UpdateSign(i, j, k, targetState.getLines()));
+            //((EntityPlayer) ((CraftPlayer) setter).getHandle()).a.b(new Packet53BlockChange(i, j, k, (WorldServer) target.getWorld()));
+            /*
+             * [Mar 23@12:58:25am] Verrier: Looks like BlockLever has some nice craftbukkit code that forces a
+             *   client side update
+             * [Mar 23@12:59:17am] Verrier: assuming it's canceled, I mean:
+             *   ((EntityPlayer) entityhuman).a.b(new Packet53BlockChange(i, j, k, (WorldServer) world));  :D
+             *   There you go celticminstrel :)  lol
+*/
         }
     }
 
@@ -95,10 +115,10 @@ public class SignEdit extends JavaPlugin {
             logger.info(evt.getType() + ", " + clicked + ", " + holding + ", " + evt.getBlockFace());
             if(holding != Material.SIGN) return;
             if(clicked == Material.WALL_SIGN || clicked == Material.SIGN_POST) {
-                final Block target = evt.getBlockClicked();
-                final Block source = target.getRelative(evt.getBlockFace());
+                Block target = evt.getBlockClicked();
+                Block source = target.getRelative(evt.getBlockFace());
                 //getServer().getScheduler().scheduleSyncDelayedTask(plugin,
-                updates.put(source.getLocation(), new SignUpdater(target, source));
+                updates.put(source.getLocation(), new SignUpdater(target, source, evt.getPlayer()));
                 evt.getPlayer().getItemInHand().setAmount(evt.getPlayer().getItemInHand().getAmount()+1);
             }
         }
