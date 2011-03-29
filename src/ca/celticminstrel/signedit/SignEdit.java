@@ -14,9 +14,10 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.player.PlayerItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -84,15 +85,16 @@ public class SignEdit extends JavaPlugin {
     
     private PlayerListener pl = new PlayerListener() {
         @Override
-        public void onPlayerItem(PlayerItemEvent evt) {
+        public void onPlayerInteract(PlayerInteractEvent evt) {
+            if(evt.getAction() != Action.RIGHT_CLICK_BLOCK) return;
             Material holding = evt.getPlayer().getItemInHand().getType();
-            Material clicked = evt.getBlockClicked().getType();
+            Material clicked = evt.getClickedBlock().getType();
             if(holding != Material.SIGN) return;
             if(clicked == Material.WALL_SIGN || clicked == Material.SIGN_POST) {
-                Block target = evt.getBlockClicked();
+                Block target = evt.getClickedBlock();
                 Block source = target.getRelative(evt.getBlockFace());
                 if(!hasPermission(evt.getPlayer())) {
-                    source.setType(Material.AIR);
+                    evt.setCancelled(true);
                     evt.getPlayer().sendMessage("Sorry, you do not have permission to edit signs.");
                     return;
                 }
@@ -112,7 +114,7 @@ public class SignEdit extends JavaPlugin {
         PluginDescriptionFile pdfFile = this.getDescription();
         logger.info("Enabled " + pdfFile.getFullName());
         getServer().getPluginManager().registerEvent(Type.SIGN_CHANGE, bl, Priority.Normal, this);
-        getServer().getPluginManager().registerEvent(Type.PLAYER_ITEM, pl, Priority.Normal, this);
+        getServer().getPluginManager().registerEvent(Type.PLAYER_INTERACT, pl, Priority.Normal, this);
         
         Plugin perms = getServer().getPluginManager().getPlugin("Permissions");
         if(perms != null) {
