@@ -1,4 +1,4 @@
-<project name="General" default="dist" basedir=".">
+<project name="SignEdit" default="dist" basedir=".">
 
   <property name="src" location="src"/>
   <property name="resources" location="resources"/>
@@ -8,6 +8,7 @@
   <property name="artifacts" location="${target}/artifacts"/>
   
   <property name="craftbukkit.jar"  value="craftbukkit.jar"/>
+  <property name="permissions.jar"  value="Permissions.jar"/>
   
   <target name="init">
     <mkdir dir="${lib}"/>
@@ -18,12 +19,15 @@
   <target name="get_latest_libs" depends="init">
     <get src="http://ci.bukkit.org/job/dev-CraftBukkit/promotion/latest/Recommended/artifact/target/craftbukkit-0.0.1-SNAPSHOT.jar"
       dest="${lib}/craftbukkit.jar" usetimestamp="true"/>
+    <get src="http://www.theyeticave.net/downloads/permissions/latest/Permissions.jar"
+      dest="${lib}" usetimestamp="true"/>
   </target>
   
   <target name="compile" depends="get_latest_libs">
     <javac srcdir="${src}" destdir="${classes}" includeantruntime="false" debug="on">
       <classpath>
         <pathelement location="${lib}/${craftbukkit.jar}"/>
+        <pathelement location="${lib}/${permissions.jar}"/>
       </classpath>
     </javac>
   </target>

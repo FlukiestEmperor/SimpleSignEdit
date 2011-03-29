@@ -18,8 +18,12 @@ import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerItemEvent;
 import org.bukkit.event.player.PlayerListener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.nijiko.permissions.PermissionHandler;
+import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class SignEdit extends JavaPlugin {
     private final class SignUpdater implements Runnable {
@@ -40,8 +44,12 @@ public class SignEdit extends JavaPlugin {
         }
 
         public void run() {
-            logger.info("Running task.");
             if(target.getType() != Material.WALL_SIGN && target.getType() != Material.SIGN_POST) {
+                return;
+            }
+            if(!hasPermission(setter)) {
+                source.setType(Material.AIR);
+                setter.sendMessage("Sorry, your sign editing permissions were revoked while you were editing.");
                 return;
             }
             Sign targetState = (Sign) target.getState();
@@ -69,6 +77,7 @@ public class SignEdit extends JavaPlugin {
             Location loc = evt.getBlock().getLocation();
             if(updates.containsKey(loc)) {
                 updates.get(loc).setLines(evt.getLines()).run();
+                updates.remove(loc);
             }
         }
     };
@@ -78,22 +87,40 @@ public class SignEdit extends JavaPlugin {
         public void onPlayerItem(PlayerItemEvent evt) {
             Material holding = evt.getPlayer().getItemInHand().getType();
             Material clicked = evt.getBlockClicked().getType();
-            logger.info(evt.getType() + ", " + clicked + ", " + holding + ", " + evt.getBlockFace());
             if(holding != Material.SIGN) return;
             if(clicked == Material.WALL_SIGN || clicked == Material.SIGN_POST) {
                 Block target = evt.getBlockClicked();
                 Block source = target.getRelative(evt.getBlockFace());
+                if(!hasPermission(evt.getPlayer())) {
+                    source.setType(Material.AIR);
+                    evt.getPlayer().sendMessage("Sorry, you do not have permission to edit signs.");
+                    return;
+                }
                 updates.put(source.getLocation(), new SignUpdater(target, source, evt.getPlayer()));
                 evt.getPlayer().getItemInHand().setAmount(evt.getPlayer().getItemInHand().getAmount()+1);
             }
         }
     };
+    
+    private boolean hasPermission(Player who) {
+        if(p == null) return who.isOp();
+        return p.has(who, "simplesignedit");
+    }
+    PermissionHandler p = null;
 
     public void onEnable() {
         PluginDescriptionFile pdfFile = this.getDescription();
         logger.info("Enabled " + pdfFile.getFullName());
         getServer().getPluginManager().registerEvent(Type.SIGN_CHANGE, bl, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Type.PLAYER_ITEM, pl, Priority.Normal, this);
+        
+        Plugin perms = getServer().getPluginManager().getPlugin("Permissions");
+        if(perms != null) {
+            p = ((Permissions) perms).getHandler();
+            logger.info("Using Permissions for sign editing.");
+        } else {
+            logger.info("Sign editing restricted to ops.");
+        }
     }
 
 }
