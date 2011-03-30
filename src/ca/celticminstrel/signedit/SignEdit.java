@@ -1,5 +1,6 @@
 package ca.celticminstrel.signedit;
 
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -22,6 +23,7 @@ import org.bukkit.event.player.PlayerListener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.ChatColor;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -59,9 +61,8 @@ public class SignEdit extends JavaPlugin {
                     targetState.setLine(i, lines[i]);
             }
             source.setType(Material.AIR);
-            int i = target.getX(), j = target.getY(), k = target.getZ();
-            // This line updates the sign for the user.
-            ((EntityPlayer) ((CraftPlayer) setter).getHandle()).a.b(new Packet130UpdateSign(i, j, k, targetState.getLines()));
+            for(Player who : setter.getWorld().getPlayers())
+                sendSignUpdate(target, who);
         }
     }
 
@@ -76,6 +77,8 @@ public class SignEdit extends JavaPlugin {
         @Override
         public void onSignChange(SignChangeEvent evt) {
             Location loc = evt.getBlock().getLocation();
+            for(int i = 0; i < 4; i++)
+                evt.setLine(i, parseColour(evt.getLine(i), evt.getPlayer()));
             if(updates.containsKey(loc)) {
                 updates.get(loc).setLines(evt.getLines()).run();
                 updates.remove(loc);
@@ -103,10 +106,15 @@ public class SignEdit extends JavaPlugin {
             }
         }
     };
-    
+
     private boolean hasPermission(Player who) {
         if(p == null) return who.isOp();
-        return p.has(who, "simplesignedit");
+        return p.has(who, "simplesign.edit");
+    }
+    private boolean hasColour(Player who, ChatColor clr) {
+        if(p == null) return who.isOp();
+        String colourName = clr.toString().toLowerCase().replace("_", "");
+        return p.has(who, "simplesign.colour." + colourName) || p.has(who, "simplesign.color." + colourName);
     }
     PermissionHandler p = null;
 
@@ -124,5 +132,23 @@ public class SignEdit extends JavaPlugin {
             logger.info("Sign editing restricted to ops.");
         }
     }
-
+    private void sendSignUpdate(Block signBlock, Player who) {
+        int i = signBlock.getX(), j = signBlock.getY(), k = signBlock.getZ();
+        // This line updates the sign for the user.
+        Sign sign = (Sign) signBlock.getState();
+        CraftPlayer cp = (CraftPlayer) who;
+        EntityPlayer ep = (EntityPlayer) cp.getHandle();
+        ep.a.b(new Packet130UpdateSign(i, j, k, sign.getLines()));
+    }
+    private String parseColour(String line, Player setter) {
+        String regex = "&(?<!&&)(?=[0-9a-fA-F])";
+        Formatter fmt = new Formatter();
+        for(ChatColor clr : ChatColor.values()) {
+            if(!hasColour(setter, clr)) continue;
+            String code = Integer.toHexString(clr.getCode());
+            line = line.replaceAll(fmt.format(regex, code).toString(), "\u00A7");
+        }
+        return line;
+        //return line.replaceAll(regex, "\u00A7");
+    }
 }
