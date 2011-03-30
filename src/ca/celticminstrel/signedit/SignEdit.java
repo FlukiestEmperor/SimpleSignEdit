@@ -148,7 +148,7 @@ public class SignEdit extends JavaPlugin {
             String code = Integer.toHexString(clr.getCode());
             line = line.replaceAll(fmt.format(regex, code).toString(), "\u00A7");
         }
-        return line;
+        return line.replace("&&", "&");
         //return line.replaceAll(regex, "\u00A7");
     }
 }
