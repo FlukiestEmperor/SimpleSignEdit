@@ -29,7 +29,7 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class SignEdit extends JavaPlugin {
-    private final class SignUpdater implements Runnable {
+    protected final class SignUpdater implements Runnable {
         private final Block target;
         private final Block source;
         private String[] lines;
@@ -101,8 +101,10 @@ public class SignEdit extends JavaPlugin {
                     evt.getPlayer().sendMessage("Sorry, you do not have permission to edit signs.");
                     return;
                 }
-                updates.put(source.getLocation(), new SignUpdater(target, source, evt.getPlayer()));
-                evt.getPlayer().getItemInHand().setAmount(evt.getPlayer().getItemInHand().getAmount()+1);
+                if(source.getType() == Material.AIR) {
+                    updates.put(source.getLocation(), new SignUpdater(target, source, evt.getPlayer()));
+                    evt.getPlayer().getItemInHand().setAmount(evt.getPlayer().getItemInHand().getAmount()+1);
+                }
             }
         }
     };

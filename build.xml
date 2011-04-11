@@ -2,7 +2,7 @@
 
   <property name="src" location="src"/>
   <property name="resources" location="resources"/>
-  <property name="lib" location="lib"/>
+  <property name="lib" location="../lib"/>
   <property name="target" location="target"/>
   <property name="classes" location="${target}/classes"/>
   <property name="artifacts" location="${target}/artifacts"/>
