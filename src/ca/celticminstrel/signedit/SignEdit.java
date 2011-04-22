@@ -92,11 +92,11 @@ public class SignEdit extends JavaPlugin {
             for(int i = 0; i < 4; i++)
                 evt.setLine(i, parseColour(evt.getLine(i), setter));
             if(updates.containsKey(loc)) {
-                logger.info("Editing sign at " + loc);
+                //logger.info("Editing sign at " + loc);
                 updates.get(loc).setLines(evt.getLines()).run();
                 updates.remove(loc);
             } else if(!ownership.containsKey(loc)) {
-                logger.info("Placing sign at " + loc);
+                //logger.info("Placing sign at " + loc);
                 ownership.put(loc, setter.getName());
             }
         }
@@ -105,7 +105,7 @@ public class SignEdit extends JavaPlugin {
         public void onBlockBreak(BlockBreakEvent evt) {
             Block block = evt.getBlock();
             if(updates.containsKey(block.getLocation())) {
-                logger.info("Cancelled breaking of an updater sign.");
+                //logger.info("Cancelled breaking of an updater sign.");
                 evt.setCancelled(true);
             } else if(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)
                 ownership.remove(block.getLocation());
@@ -223,7 +223,7 @@ public class SignEdit extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        logger.info(ownership.toString());
+        //logger.info(ownership.toString());
         Configuration config = getConfiguration();
         Formatter fmt = new Formatter();
         @SuppressWarnings("unchecked")
@@ -269,7 +269,7 @@ public class SignEdit extends JavaPlugin {
             p = ((Permissions) perms).getHandler();
             logger.info("Using Permissions for sign editing.");
         } else {
-            logger.info("Sign editing restricted to ops.");
+            logger.info("Sign editing restricted to ops and owners.");
         }
     }
     
@@ -277,9 +277,10 @@ public class SignEdit extends JavaPlugin {
         int i = signBlock.getX(), j = signBlock.getY(), k = signBlock.getZ();
         // This line updates the sign for the user.
         Sign sign = (Sign) signBlock.getState();
+        //sign.update();
         CraftPlayer cp = (CraftPlayer) who;
         EntityPlayer ep = (EntityPlayer) cp.getHandle();
-        ep.a.b(new Packet130UpdateSign(i, j, k, sign.getLines()));
+        ep.netServerHandler.sendPacket(new Packet130UpdateSign(i, j, k, sign.getLines()));
     }
     
     private String parseColour(String line, Player setter) {
