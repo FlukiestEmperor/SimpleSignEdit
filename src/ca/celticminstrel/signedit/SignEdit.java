@@ -22,6 +22,7 @@ import org.bukkit.event.Event.Type;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockListener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -109,6 +110,20 @@ public class SignEdit extends JavaPlugin {
                 evt.setCancelled(true);
             } else if(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)
                 ownership.remove(block.getLocation());
+        }
+        
+        @Override
+        public void onBlockPlace(BlockPlaceEvent evt) {
+            Block block = evt.getBlockPlaced();
+            if(block.getType() != Material.WALL_SIGN && block.getType() != Material.SIGN_POST) return;
+            if(updates.containsKey(block.getLocation())) {
+                Sign updater = (Sign) block.getState();
+                Sign editing = (Sign) evt.getBlockAgainst().getState();
+                int i = 0;
+                for(String line : editing.getLines())
+                    updater.setLine(i++, line);
+                updater.update();
+            }
         }
     };
     
@@ -247,6 +262,7 @@ public class SignEdit extends JavaPlugin {
         getServer().getPluginManager().registerEvent(Type.PLAYER_CHAT, pl, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Type.ENTITY_DAMAGE, el, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Type.BLOCK_BREAK, bl, Priority.Normal, this);
+        getServer().getPluginManager().registerEvent(Type.BLOCK_PLACE, bl, Priority.Normal, this);
         Configuration config = getConfiguration();
         config.load();
         List<String> keys = config.getKeys("signs");
