@@ -212,7 +212,7 @@ public class SignEdit extends JavaPlugin {
     };
 
     private boolean hasPermission(Player who) {
-        if(p == null) return who.isOp();
+        if(p == null) return true;
         return p.has(who, "simplesign.edit");
     }
 
@@ -241,7 +241,7 @@ public class SignEdit extends JavaPlugin {
         //logger.info(ownership.toString());
         Configuration config = getConfiguration();
         Formatter fmt = new Formatter();
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("rawtypes")
         HashMap eraser = new HashMap();
         config.setProperty("signs", eraser);
         for(Location loc : ownership.keySet()) {
