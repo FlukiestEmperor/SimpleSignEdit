@@ -290,13 +290,15 @@ public class SignEdit extends JavaPlugin {
     }
     
     private void sendSignUpdate(Block signBlock, Player who) {
-        int i = signBlock.getX(), j = signBlock.getY(), k = signBlock.getZ();
+        final int i = signBlock.getX(), j = signBlock.getY(), k = signBlock.getZ();
         // This line updates the sign for the user.
-        Sign sign = (Sign) signBlock.getState();
-        //sign.update();
-        CraftPlayer cp = (CraftPlayer) who;
-        EntityPlayer ep = (EntityPlayer) cp.getHandle();
-        ep.netServerHandler.sendPacket(new Packet130UpdateSign(i, j, k, sign.getLines()));
+        final Sign sign = (Sign) signBlock.getState();
+        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+            @Override
+            public void run() {
+                sign.update(true);
+            }
+        });
     }
     
     private String parseColour(String line, Player setter) {
