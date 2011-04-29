@@ -223,7 +223,8 @@ public class SignEdit extends JavaPlugin {
     
     protected boolean isOwnerOf(Player player, Location location) {
         String owner = ownership.get(location);
-        boolean canEditAll = p.has(player, "simplesign.edit.all");
+        boolean canEditAll = player.isOp();
+        if(p != null) canEditAll = p.has(player, "simplesign.edit.all");
         if(owner == null) return canEditAll;
         if(owner.equalsIgnoreCase(player.getName())) return true;
         if(owner.equals("*")) return true;
