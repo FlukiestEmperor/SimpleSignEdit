@@ -68,10 +68,8 @@ public class SignEdit extends JavaPlugin {
                 return;
             }
             Sign targetState = (Sign) target.getState();
-            for(int i = 0; i < 4; i++) {
-                if(!lines[i].isEmpty())
-                    targetState.setLine(i, lines[i]);
-            }
+            for(int i = 0; i < 4; i++)
+                targetState.setLine(i, lines[i]);
             source.setType(Material.AIR);
             for(Player who : setter.getWorld().getPlayers())
                 sendSignUpdate(target, who);
