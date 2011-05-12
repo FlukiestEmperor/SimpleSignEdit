@@ -239,11 +239,11 @@ public class SignEdit extends JavaPlugin {
     public void onDisable() {
         //logger.info(ownership.toString());
         Configuration config = getConfiguration();
-        Formatter fmt = new Formatter();
         @SuppressWarnings("rawtypes")
         HashMap eraser = new HashMap();
         config.setProperty("signs", eraser);
         for(Location loc : ownership.keySet()) {
+            Formatter fmt = new Formatter();
             String locString = fmt.format("%s(%d,%d,%d)", loc.getWorld().getName(),
                     loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).toString();
             config.setProperty("signs." + locString, ownership.get(loc));

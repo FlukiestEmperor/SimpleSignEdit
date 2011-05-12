@@ -2,4 +2,4 @@ name: SimpleSignEdit
 main: ca.celticminstrel.signedit.SignEdit
 authors:
   - Celtic Minstrel
-version: 1.3.3
+version: 1.3.4
