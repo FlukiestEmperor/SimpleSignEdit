@@ -13,6 +13,7 @@ import net.minecraft.server.Packet130UpdateSign;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
@@ -137,6 +138,7 @@ public class SignEdit extends JavaPlugin {
             Material clicked = target.getType();
             if(holding == Material.SIGN) {
                 if(clicked == Material.WALL_SIGN || clicked == Material.SIGN_POST) {
+                	if(cannotStackSigns(evt)) return;
                     Block source = target.getRelative(evt.getBlockFace());
                     if(!hasPermission(player)) {
                         evt.setCancelled(true);
@@ -214,7 +216,13 @@ public class SignEdit extends JavaPlugin {
         return p.has(who, "simplesign.edit");
     }
 
-    private boolean canSetOwner(Player who) {
+    private boolean cannotStackSigns(PlayerInteractEvent evt) {
+		if(evt.getMaterial() != Material.SIGN_POST) return false;
+		if(evt.getBlockFace() != BlockFace.UP) return false;
+		return getConfiguration().getBoolean("allow-stacking", true);
+	}
+
+	private boolean canSetOwner(Player who) {
         if(p == null) return who.isOp();
         return p.has(who, "simplesign.setowner");
     }
