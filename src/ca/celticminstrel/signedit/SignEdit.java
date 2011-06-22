@@ -84,6 +84,26 @@ public class SignEdit extends JavaPlugin {
     private HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
     private PermissionHandler p = null;
     
+    /**
+     * Public API function to set the owner of a sign. It's recommended that plugins which handle
+     * right-clicks on signs set the owner of their signs to no-one.
+     * @param whichSign The location of the sign whose ownership you are changing.
+     * @param owner The name of the new owner. Use "#" for no-one and "*" for everyone. Null is also no-one.
+     * @return Whether a sign's owner was actually changed. Will return false if there is no sign at the location
+     * or if the sign already has the requested owner.
+     */
+    public boolean setSignOwner(Location whichSign, String owner) {
+    	Material sign = whichSign.getWorld().getBlockAt(whichSign).getType();
+    	if(sign != Material.SIGN_POST && sign != Material.WALL_SIGN) return false;
+    	if(owner == null) owner = "#";
+    	String oldOwner = ownership.get(owner);
+    	if(oldOwner == null) oldOwner = "#";
+    	if(owner.equalsIgnoreCase(oldOwner)) return false;
+    	if(owner.equals("#")) ownership.remove(whichSign);
+    	else ownership.put(whichSign, owner);
+    	return true;
+	}
+    
     private BlockListener bl = new BlockListener() {
         @Override
         public void onSignChange(SignChangeEvent evt) {
