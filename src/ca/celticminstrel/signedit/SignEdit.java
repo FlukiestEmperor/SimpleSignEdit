@@ -120,7 +120,7 @@ public class SignEdit extends JavaPlugin {
                 Sign editing = (Sign) evt.getBlockAgainst().getState();
                 int i = 0;
                 for(String line : editing.getLines())
-                    updater.setLine(i++, line.replace('\u00A7', '&'));
+                    updater.setLine(i++, line.replace("&","&&").replace('\u00A7', '&'));
                 updater.update();
             }
         }
