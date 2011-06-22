@@ -213,7 +213,7 @@ public class SignEdit extends JavaPlugin {
 
     private boolean hasPermission(Player who) {
         if(p == null) return true;
-        return p.has(who, "simplesign.edit");
+        return p.has(who, "simplesign.edit") || p.has(who, "simplesignedit.edit");
     }
 
     private boolean canStackSigns(Material clicked, BlockFace face) {
@@ -224,13 +224,13 @@ public class SignEdit extends JavaPlugin {
 
 	private boolean canSetOwner(Player who) {
         if(p == null) return who.isOp();
-        return p.has(who, "simplesign.setowner");
+        return p.has(who, "simplesign.setowner") || p.has(who, "simplesignedit.setowner");
     }
     
     protected boolean isOwnerOf(Player player, Location location) {
         String owner = ownership.get(location);
         boolean canEditAll = player.isOp();
-        if(p != null) canEditAll = p.has(player, "simplesign.edit.all");
+        if(p != null) canEditAll = p.has(player, "simplesign.edit.all") || p.has(player, "simplesignedit.edit.all");
         if(owner == null) return canEditAll;
         if(owner.equalsIgnoreCase(player.getName())) return true;
         if(owner.equals("*")) return true;
@@ -240,7 +240,8 @@ public class SignEdit extends JavaPlugin {
     private boolean hasColour(Player who, ChatColor clr) {
         if(p == null) return who.isOp();
         String colourName = clr.toString().toLowerCase().replace("_", "");
-        return p.has(who, "simplesign.colour." + colourName) || p.has(who, "simplesign.color." + colourName);
+        return p.has(who, "simplesign.colour." + colourName) || p.has(who, "simplesign.color." + colourName) ||
+        	p.has(who, "simplesignedit.colour." + colourName) || p.has(who, "simplesignedit.color." + colourName);
     }
 
     @Override
