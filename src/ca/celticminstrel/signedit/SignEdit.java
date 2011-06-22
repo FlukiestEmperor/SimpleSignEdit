@@ -107,8 +107,17 @@ public class SignEdit extends JavaPlugin {
             if(updates.containsKey(block.getLocation())) {
                 //logger.info("Cancelled breaking of an updater sign.");
                 evt.setCancelled(true);
-            } else if(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)
+            } else if(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
+            	if(getConfiguration().getBoolean("break-protect", false)) {
+            		Player player = evt.getPlayer();
+                    if(!isOwnerOf(player, evt.getBlock().getLocation())) {
+                        evt.setCancelled(true);
+                        player.sendMessage("Sorry, you are not the owner of that sign.");
+                        return;
+                    }
+            	}
                 ownership.remove(block.getLocation());
+            }
         }
         
         @Override
