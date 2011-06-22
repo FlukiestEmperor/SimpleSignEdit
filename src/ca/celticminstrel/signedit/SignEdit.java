@@ -138,7 +138,7 @@ public class SignEdit extends JavaPlugin {
             Material clicked = target.getType();
             if(holding == Material.SIGN) {
                 if(clicked == Material.WALL_SIGN || clicked == Material.SIGN_POST) {
-                	if(cannotStackSigns(evt)) return;
+                	if(canStackSigns(clicked, evt.getBlockFace())) return;
                     Block source = target.getRelative(evt.getBlockFace());
                     if(!hasPermission(player)) {
                         evt.setCancelled(true);
@@ -216,9 +216,9 @@ public class SignEdit extends JavaPlugin {
         return p.has(who, "simplesign.edit");
     }
 
-    private boolean cannotStackSigns(PlayerInteractEvent evt) {
-		if(evt.getMaterial() != Material.SIGN_POST) return false;
-		if(evt.getBlockFace() != BlockFace.UP) return false;
+    private boolean canStackSigns(Material clicked, BlockFace face) {
+		if(clicked != Material.SIGN_POST) return false;
+		if(face != BlockFace.UP) return false;
 		return getConfiguration().getBoolean("allow-stacking", true);
 	}
 
