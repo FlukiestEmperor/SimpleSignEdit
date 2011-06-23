@@ -104,6 +104,18 @@ public class SignEdit extends JavaPlugin {
 		return true;
 	}
 	
+	/**
+	 * Public API function to get the owner of a sign.
+	 * @param whichSign The location of the sign whose ownership you are checking.
+	 * @return The sign's current owner; "#" means no-one, "*" means everyone.
+	 */
+	public String getSignOwner(Location whichSign) {
+		if(ownership.containsKey(whichSign))
+			return ownership.get(whichSign);
+		else return "#";
+			
+	}
+	
 	private BlockListener bl = new BlockListener() {
 		@Override
 		public void onSignChange(SignChangeEvent evt) {
