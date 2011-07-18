@@ -7,15 +7,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.minecraft.server.EntityPlayer;
-import net.minecraft.server.Packet130UpdateSign;
-
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
@@ -32,14 +28,14 @@ import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
 import org.bukkit.ChatColor;
-
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class SignEdit extends JavaPlugin {
 	protected final class SignUpdater implements Runnable {
@@ -59,6 +55,7 @@ public class SignEdit extends JavaPlugin {
 			return this;
 		}
 
+		@Override
 		public void run() {
 			if(target.getType() != Material.WALL_SIGN && target.getType() != Material.SIGN_POST) {
 				return;
@@ -72,8 +69,7 @@ public class SignEdit extends JavaPlugin {
 			for(int i = 0; i < 4; i++)
 				targetState.setLine(i, lines[i]);
 			source.setType(Material.AIR);
-			for(Player who : setter.getWorld().getPlayers())
-				sendSignUpdate(target, who);
+			sendSignUpdate(target);
 		}
 	}
 
@@ -82,7 +78,6 @@ public class SignEdit extends JavaPlugin {
 	private HashMap<Location,SignUpdater> updates = new HashMap<Location,SignUpdater>();
 	private HashMap<Location,String> ownership = new HashMap<Location,String>();
 	private HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
-	private PermissionHandler p = null;
 	
 	/**
 	 * Public API function to set the owner of a sign. It's recommended that plugins which handle
@@ -253,8 +248,7 @@ public class SignEdit extends JavaPlugin {
 	};
 
 	private boolean hasPermission(Player who) {
-		if(p == null) return true;
-		return p.has(who, "simplesign.edit") || p.has(who, "simplesignedit.edit");
+		return who.hasPermission("simplesignedit.edit");
 	}
 
 	private boolean canStackSigns(Material clicked, BlockFace face) {
@@ -264,14 +258,12 @@ public class SignEdit extends JavaPlugin {
 	}
 
 	private boolean canSetOwner(Player who) {
-		if(p == null) return who.isOp();
-		return p.has(who, "simplesign.setowner") || p.has(who, "simplesignedit.setowner");
+		return who.hasPermission("simplesignedit.setowner");
 	}
 	
 	protected boolean isOwnerOf(Player player, Location location) {
 		String owner = ownership.get(location);
-		boolean canEditAll = player.isOp();
-		if(p != null) canEditAll = p.has(player, "simplesign.edit.all") || p.has(player, "simplesignedit.edit.all");
+		boolean canEditAll = player.hasPermission("simplesignedit.edit.all");
 		if(owner == null) return canEditAll;
 		if(owner.equalsIgnoreCase(player.getName())) return true;
 		if(owner.equals("*")) return true;
@@ -279,10 +271,8 @@ public class SignEdit extends JavaPlugin {
 	}
 	
 	private boolean hasColour(Player who, ChatColor clr) {
-		if(p == null) return who.isOp();
-		String colourName = clr.toString().toLowerCase().replace("_", "");
-		return p.has(who, "simplesign.colour." + colourName) || p.has(who, "simplesign.color." + colourName) ||
-			p.has(who, "simplesignedit.colour." + colourName) || p.has(who, "simplesignedit.color." + colourName);
+		String colourName = clr.name().toLowerCase().replace("_", "");
+		return who.hasPermission("simplesignedit.colour." + colourName);
 	}
 
 	@Override
@@ -329,17 +319,36 @@ public class SignEdit extends JavaPlugin {
 			}
 		}
 		
-		Plugin perms = getServer().getPluginManager().getPlugin("Permissions");
-		if(perms != null) {
-			p = ((Permissions) perms).getHandler();
-			logger.info("Using Permissions for sign editing.");
-		} else {
-			logger.info("Sign editing restricted to ops and owners.");
+		HashMap<String,Boolean> colours = new HashMap<String,Boolean>();
+		PluginManager pm = getServer().getPluginManager();
+		Permission perm;
+		for(ChatColor colour : ChatColor.values()) {
+			String colourName = colour.name().toLowerCase().replace("_", "");
+			perm = new Permission(
+				"simplesignedit.colour." + colourName,
+				"Allows you to use the colour " + colourName + " on signs."
+			);
+			pm.addPermission(perm);
+			HashMap<String,Boolean> child = new HashMap<String,Boolean>();
+			child.put("simplesignedit.colour." + colourName, true);
+			perm = new Permission(
+				"simplesignedit.color." + colourName,
+				"Allows you to use the colour " + colourName + " on signs.",
+				child
+			);
+			pm.addPermission(perm);
+			colours.put("simplesignedit.colour." + colourName, true);
 		}
+		perm = new Permission(
+			"simplesignedit.colour.*",
+			"Allows you to use any colour on a sign.",
+			PermissionDefault.OP,
+			colours
+		);
+		pm.addPermission(perm);
 	}
 	
-	private void sendSignUpdate(Block signBlock, Player who) {
-		final int i = signBlock.getX(), j = signBlock.getY(), k = signBlock.getZ();
+	private void sendSignUpdate(Block signBlock) {
 		// This line updates the sign for the user.
 		final Sign sign = (Sign) signBlock.getState();
 		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -351,11 +360,12 @@ public class SignEdit extends JavaPlugin {
 	}
 	
 	private String parseColour(String line, Player setter) {
-		String regex = "&(?<!&&)(?=[0-9a-fA-F])";
-		Formatter fmt = new Formatter();
+		String regex = "&(?<!&&)(?=%s)";
+		Formatter fmt;
 		for(ChatColor clr : ChatColor.values()) {
 			if(!hasColour(setter, clr)) continue;
 			String code = Integer.toHexString(clr.getCode());
+			fmt = new Formatter();
 			line = line.replaceAll(fmt.format(regex, code).toString(), "\u00A7");
 		}
 		return line.replace("&&", "&");

@@ -2,4 +2,18 @@ name: SimpleSignEdit
 main: ca.celticminstrel.signedit.SignEdit
 authors:
   - Celtic Minstrel
-version: 1.4
+version: 1.5
+permissions:
+  simplesignedit.edit:
+    description: Allows you to edit signs by right-clicking while holding a sign.
+    default: true
+  simplesignedit.edit.all:
+    description: Allows you to edit signs you don't own.
+    default: op
+  simplesignedit.setowner:
+    description: Allows you to change the owner of a sign.
+    default: op
+  simplesignedit.color.*:
+    description: Allows you to use any colour on a sign.
+    children:
+      simplesignedit.colour.*: true
