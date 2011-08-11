@@ -20,6 +20,11 @@ final class SignPlayerListener extends PlayerListener {
 	public void onPlayerInteract(PlayerInteractEvent evt) {
 		if(evt.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 		Player player = evt.getPlayer();
+		String sneak = this.signEdit.getConfiguration().getString("sneaking","both");
+		Boolean needsSneak = null;
+		if(sneak.equalsIgnoreCase("true")) needsSneak = true;
+		else if(sneak.equalsIgnoreCase("false")) needsSneak = false;
+		if(needsSneak != null && !needsSneak.equals(player.isSneaking())) return;
 		ItemStack itemInHand = player.getItemInHand();
 		if(itemInHand == null) return;
 		Material holding = itemInHand.getType();
