@@ -2,7 +2,7 @@ name: SimpleSignEdit
 main: ca.celticminstrel.signedit.SignEdit
 authors:
   - Celtic Minstrel
-version: 1.6
+version: 1.6.1
 permissions:
   simplesignedit.edit:
     description: Allows you to edit signs by right-clicking while holding a sign.
