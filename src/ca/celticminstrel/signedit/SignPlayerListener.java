@@ -72,14 +72,14 @@ final class SignPlayerListener extends PlayerListener {
 		String[] split = evt.getMessage().trim().split("\\s+");
 		split[0] = split[0].trim();
 		if(split[0].equals("@")) {
-			signEdit.ownership.put(signEdit.ownerSetting.get(player.getName()), player.getName());
+			signEdit.setSignOwner(signEdit.ownerSetting.get(player.getName()), player.getName());
 			player.sendMessage("Owner set to " + player.getName());
-		} else if(split[0].equals("#")) {
-			signEdit.ownership.remove(signEdit.ownerSetting.get(player.getName()));
-			player.sendMessage("Owner set to no-one");
 		} else {
-			signEdit.ownership.put(signEdit.ownerSetting.get(player.getName()), split[0]);
-			player.sendMessage("Owner set to " + (split[0].equals("*") ? "everyone" : split[0]));
+			signEdit.setSignOwner(signEdit.ownerSetting.get(player.getName()), split[0]);
+			String who = split[0];
+			if(split[0].equals("#")) who = "no-one";
+			else if(split[0].equals("*")) who = "everyone";
+			player.sendMessage("Owner set to " + who);
 			player.sendMessage("(Note: if no player by that name exists, no-one will be able to edit this sign.)");
 		}
 		signEdit.ownerSetting.remove(player.getName());

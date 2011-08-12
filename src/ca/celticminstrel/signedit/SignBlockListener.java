@@ -27,9 +27,9 @@ final class SignBlockListener extends BlockListener {
 			//logger.info("Editing sign at " + loc);
 			signEdit.updates.get(loc).setLines(evt.getLines()).run();
 			signEdit.updates.remove(loc);
-		} else if(!signEdit.ownership.containsKey(loc)) {
+		} else if(!signEdit.isSignOwned(loc)) {
 			//logger.info("Placing sign at " + loc);
-			signEdit.ownership.put(loc, setter.getName());
+			signEdit.setSignOwner(loc, setter.getName());
 		}
 	}
 	
@@ -48,7 +48,7 @@ final class SignBlockListener extends BlockListener {
 					return;
 				}
 			}
-			signEdit.ownership.remove(block.getLocation());
+			signEdit.setSignOwner(block.getLocation(), "#");
 		}
 	}
 	

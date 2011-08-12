@@ -23,7 +23,7 @@ final class SignEntityListener extends EntityListener {
 		if(!(damaged instanceof Player)) return;
 		Player player = (Player) damaged, setter = (Player) damager;
 		if(!signEdit.ownerSetting.containsKey(setter.getName())) return;
-		signEdit.ownership.put(signEdit.ownerSetting.get(setter.getName()), player.getName());
+		signEdit.setSignOwner(signEdit.ownerSetting.get(setter.getName()), player.getName());
 		setter.sendMessage("Owner set to " + player.getName());
 		signEdit.ownerSetting.remove(setter.getName());
 		evt.setCancelled(true);

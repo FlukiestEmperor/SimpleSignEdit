@@ -33,7 +33,7 @@ public class SignEdit extends JavaPlugin {
 	private PlayerListener pl = new SignPlayerListener(this);
 	private EntityListener el = new SignEntityListener(this);
 	HashMap<Location,SignUpdater> updates = new HashMap<Location,SignUpdater>();
-	HashMap<Location,String> ownership = new HashMap<Location,String>();
+	private HashMap<Location,String> ownership = new HashMap<Location,String>();
 	HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
 	
 	/**
@@ -87,6 +87,24 @@ public class SignEdit extends JavaPlugin {
 	 */
 	public String getSignOwner(Block whichSign) {
 		return getSignOwner(whichSign.getLocation());
+	}
+	
+	/**
+	 * Convenience method to check if a sign has an owner
+	 * @param whichSign The location of the sign whose owned status you are checking.
+	 * @return True if the sign is owned by someone (or everyone), false if it is owned by no-one.
+	 */
+	public boolean isSignOwned(Location whichSign) {
+		return !getSignOwner(whichSign).equals("#");
+	}
+	
+	/**
+	 * Convenience method to check if a sign has an owner
+	 * @param whichSign The sign whose owned status you are checking.
+	 * @return True if the sign is owned by someone (or everyone), false if it is owned by no-one.
+	 */
+	public boolean isSignOwned(Block whichSign) {
+		return !getSignOwner(whichSign).equals("#");
 	}
 
 	boolean hasPermission(Player who) {
