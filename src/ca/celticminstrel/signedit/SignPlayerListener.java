@@ -13,14 +13,14 @@ final class SignPlayerListener extends PlayerListener {
 	private final SignEdit signEdit;
 	
 	SignPlayerListener(SignEdit instance) {
-		this.signEdit = instance;
+		signEdit = instance;
 	}
 
 	@Override
 	public void onPlayerInteract(PlayerInteractEvent evt) {
 		if(evt.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 		Player player = evt.getPlayer();
-		String sneak = this.signEdit.getConfiguration().getString("sneaking","both");
+		String sneak = Option.SNEAKING.get();
 		Boolean needsSneak = null;
 		if(sneak.equalsIgnoreCase("true")) needsSneak = true;
 		else if(sneak.equalsIgnoreCase("false")) needsSneak = false;
@@ -32,34 +32,34 @@ final class SignPlayerListener extends PlayerListener {
 		Material clicked = target.getType();
 		if(holding == Material.SIGN) {
 			if(clicked == Material.WALL_SIGN || clicked == Material.SIGN_POST) {
-				if(this.signEdit.canStackSigns(clicked, evt.getBlockFace())) return;
+				if(signEdit.canStackSigns(clicked, evt.getBlockFace())) return;
 				Block source = target.getRelative(evt.getBlockFace());
-				if(!this.signEdit.hasPermission(player)) {
+				if(!signEdit.hasPermission(player)) {
 					evt.setCancelled(true);
 					player.sendMessage("Sorry, you do not have permission to edit signs.");
 					return;
 				}
-				if(!this.signEdit.isOwnerOf(player, target.getLocation())) {
+				if(!signEdit.isOwnerOf(player, target.getLocation())) {
 					evt.setCancelled(true);
 					player.sendMessage("Sorry, you are not the owner of that sign.");
 					return;
 				}
 				if(source.getType() == Material.AIR) {
-					this.signEdit.updates.put(source.getLocation(), new SignUpdater(this.signEdit, target, source, player));
+					signEdit.updates.put(source.getLocation(), new SignUpdater(signEdit, target, source, player));
 					itemInHand.setAmount(itemInHand.getAmount()+1);
 				}
 			}
-		} else if(holding == Material.getMaterial(this.signEdit.getConfiguration().getInt("view-owner", 280))) {
+		} else if(holding == Material.getMaterial(Option.VIEW_OWNER.get())) {
 			if(clicked != Material.WALL_SIGN && clicked != Material.SIGN_POST) return;
-			player.sendMessage("That sign is owned by " + this.signEdit.getOwnerOf(target));
-		} else if(holding == Material.getMaterial(this.signEdit.getConfiguration().getInt("set-owner", 288))) {
+			player.sendMessage("That sign is owned by " + signEdit.getOwnerOf(target));
+		} else if(holding == Material.getMaterial(Option.SET_OWNER.get())) {
 			if(clicked != Material.WALL_SIGN && clicked != Material.SIGN_POST) return;
-			if(!this.signEdit.canSetOwner(player)) {
+			if(!signEdit.canSetOwner(player)) {
 				evt.setCancelled(true);
 				player.sendMessage("Sorry, you do not have permission to set the owner of signs.");
 				return;
 			}
-			this.signEdit.ownerSetting.put(player.getName(),target.getLocation());
+			signEdit.ownerSetting.put(player.getName(),target.getLocation());
 			player.sendMessage("Who should be the new owner of the sign?");
 			player.sendMessage("(Punch them or enter their name into chat.)");
 		}
@@ -68,21 +68,21 @@ final class SignPlayerListener extends PlayerListener {
 	@Override
 	public void onPlayerChat(PlayerChatEvent evt) {
 		Player player = evt.getPlayer();
-		if(!this.signEdit.ownerSetting.containsKey(player.getName())) return;
+		if(!signEdit.ownerSetting.containsKey(player.getName())) return;
 		String[] split = evt.getMessage().trim().split("\\s+");
 		split[0] = split[0].trim();
 		if(split[0].equals("@")) {
-			this.signEdit.ownership.put(this.signEdit.ownerSetting.get(player.getName()), player.getName());
+			signEdit.ownership.put(signEdit.ownerSetting.get(player.getName()), player.getName());
 			player.sendMessage("Owner set to " + player.getName());
 		} else if(split[0].equals("#")) {
-			this.signEdit.ownership.remove(this.signEdit.ownerSetting.get(player.getName()));
+			signEdit.ownership.remove(signEdit.ownerSetting.get(player.getName()));
 			player.sendMessage("Owner set to no-one");
 		} else {
-			this.signEdit.ownership.put(this.signEdit.ownerSetting.get(player.getName()), split[0]);
+			signEdit.ownership.put(signEdit.ownerSetting.get(player.getName()), split[0]);
 			player.sendMessage("Owner set to " + (split[0].equals("*") ? "everyone" : split[0]));
 			player.sendMessage("(Note: if no player by that name exists, no-one will be able to edit this sign.)");
 		}
-		this.signEdit.ownerSetting.remove(player.getName());
+		signEdit.ownerSetting.remove(player.getName());
 		evt.setCancelled(true);
 	}
 }

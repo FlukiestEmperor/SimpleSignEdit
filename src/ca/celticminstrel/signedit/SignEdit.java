@@ -96,7 +96,7 @@ public class SignEdit extends JavaPlugin {
 	boolean canStackSigns(Material clicked, BlockFace face) {
 		if(clicked != Material.SIGN_POST) return false;
 		if(face != BlockFace.UP) return false;
-		return getConfiguration().getBoolean("allow-stacking", true);
+		return Option.ALLOW_STACKING.get();
 	}
 
 	boolean canSetOwner(Player who) {
@@ -146,6 +146,7 @@ public class SignEdit extends JavaPlugin {
 		getServer().getPluginManager().registerEvent(Type.BLOCK_PLACE, bl, Priority.Normal, this);
 		Configuration config = getConfiguration();
 		config.load();
+		Option.setConfiguration(config);
 		List<String> keys = config.getKeys("signs");
 		if(keys != null) {
 			for(String loc : keys) {

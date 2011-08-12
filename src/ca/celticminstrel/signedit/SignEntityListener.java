@@ -10,7 +10,7 @@ final class SignEntityListener extends EntityListener {
 	private final SignEdit signEdit;
 	
 	SignEntityListener(SignEdit instance) {
-		this.signEdit = instance;
+		signEdit = instance;
 	}
 
 	@Override
@@ -22,10 +22,10 @@ final class SignEntityListener extends EntityListener {
 		Entity damaged = evt.getEntity();
 		if(!(damaged instanceof Player)) return;
 		Player player = (Player) damaged, setter = (Player) damager;
-		if(!this.signEdit.ownerSetting.containsKey(setter.getName())) return;
-		this.signEdit.ownership.put(this.signEdit.ownerSetting.get(setter.getName()), player.getName());
+		if(!signEdit.ownerSetting.containsKey(setter.getName())) return;
+		signEdit.ownership.put(signEdit.ownerSetting.get(setter.getName()), player.getName());
 		setter.sendMessage("Owner set to " + player.getName());
-		this.signEdit.ownerSetting.remove(setter.getName());
+		signEdit.ownerSetting.remove(setter.getName());
 		evt.setCancelled(true);
 	}
 }

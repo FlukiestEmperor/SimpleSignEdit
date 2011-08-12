@@ -14,7 +14,7 @@ final class SignBlockListener extends BlockListener {
 	private final SignEdit signEdit;
 	
 	SignBlockListener(SignEdit instance) {
-		this.signEdit = instance;
+		signEdit = instance;
 	}
 
 	@Override
@@ -22,33 +22,33 @@ final class SignBlockListener extends BlockListener {
 		Location loc = evt.getBlock().getLocation();
 		Player setter = evt.getPlayer();
 		for(int i = 0; i < 4; i++)
-			evt.setLine(i, this.signEdit.parseColour(evt.getLine(i), setter));
-		if(this.signEdit.updates.containsKey(loc)) {
+			evt.setLine(i, signEdit.parseColour(evt.getLine(i), setter));
+		if(signEdit.updates.containsKey(loc)) {
 			//logger.info("Editing sign at " + loc);
-			this.signEdit.updates.get(loc).setLines(evt.getLines()).run();
-			this.signEdit.updates.remove(loc);
-		} else if(!this.signEdit.ownership.containsKey(loc)) {
+			signEdit.updates.get(loc).setLines(evt.getLines()).run();
+			signEdit.updates.remove(loc);
+		} else if(!signEdit.ownership.containsKey(loc)) {
 			//logger.info("Placing sign at " + loc);
-			this.signEdit.ownership.put(loc, setter.getName());
+			signEdit.ownership.put(loc, setter.getName());
 		}
 	}
 	
 	@Override
 	public void onBlockBreak(BlockBreakEvent evt) {
 		Block block = evt.getBlock();
-		if(this.signEdit.updates.containsKey(block.getLocation())) {
+		if(signEdit.updates.containsKey(block.getLocation())) {
 			//logger.info("Cancelled breaking of an updater sign.");
 			evt.setCancelled(true);
 		} else if(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
-			if(this.signEdit.getConfiguration().getBoolean("break-protect", false)) {
+			if(Option.BREAK_PROTECT.get()) {
 				Player player = evt.getPlayer();
-				if(!this.signEdit.isOwnerOf(player, evt.getBlock().getLocation())) {
+				if(!signEdit.isOwnerOf(player, evt.getBlock().getLocation())) {
 					evt.setCancelled(true);
 					player.sendMessage("Sorry, you are not the owner of that sign.");
 					return;
 				}
 			}
-			this.signEdit.ownership.remove(block.getLocation());
+			signEdit.ownership.remove(block.getLocation());
 		}
 	}
 	
@@ -56,7 +56,7 @@ final class SignBlockListener extends BlockListener {
 	public void onBlockPlace(BlockPlaceEvent evt) {
 		Block block = evt.getBlockPlaced();
 		if(block.getType() != Material.WALL_SIGN && block.getType() != Material.SIGN_POST) return;
-		if(this.signEdit.updates.containsKey(block.getLocation())) {
+		if(signEdit.updates.containsKey(block.getLocation())) {
 			Sign updater = (Sign) block.getState();
 			Sign editing = (Sign) evt.getBlockAgainst().getState();
 			int i = 0;
