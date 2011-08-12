@@ -55,6 +55,18 @@ public class SignEdit extends JavaPlugin {
 		else ownership.put(whichSign, owner);
 		return true;
 	}
+
+	/**
+	 * Public API function to set the owner of a sign. It's recommended that plugins which handle
+	 * right-clicks on signs set the owner of their signs to no-one.
+	 * @param whichSign The sign whose ownership you are changing.
+	 * @param owner The name of the new owner. Use "#" for no-one and "*" for everyone. Null is also no-one.
+	 * @return Whether a sign's owner was actually changed. Will return false if there is no sign at the location
+	 * or if the sign already has the requested owner.
+	 */
+	public boolean setSignOwner(Block whichSign, String owner) {
+		return setSignOwner(whichSign.getLocation(), owner);
+	}
 	
 	/**
 	 * Public API function to get the owner of a sign.
@@ -66,6 +78,15 @@ public class SignEdit extends JavaPlugin {
 			return ownership.get(whichSign);
 		else return "#";
 			
+	}
+
+	/**
+	 * Public API function to get the owner of a sign.
+	 * @param whichSign The sign whose ownership you are checking.
+	 * @return The sign's current owner; "#" means no-one, "*" means everyone.
+	 */
+	public String getSignOwner(Block whichSign) {
+		return getSignOwner(whichSign.getLocation());
 	}
 
 	boolean hasPermission(Player who) {
