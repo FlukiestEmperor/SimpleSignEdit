@@ -161,7 +161,7 @@ public class SignEdit extends JavaPlugin {
 		getServer().getPluginManager().registerEvent(Type.PLAYER_CHAT, pl, Priority.Normal, this);
 		getServer().getPluginManager().registerEvent(Type.ENTITY_DAMAGE, el, Priority.Normal, this);
 		getServer().getPluginManager().registerEvent(Type.BLOCK_BREAK, bl, Priority.Normal, this);
-		getServer().getPluginManager().registerEvent(Type.BLOCK_PLACE, bl, Priority.Normal, this);
+		getServer().getPluginManager().registerEvent(Type.BLOCK_PLACE, bl, Priority.High, this);
 		Configuration config = getConfiguration();
 		config.load();
 		Option.setConfiguration(config);

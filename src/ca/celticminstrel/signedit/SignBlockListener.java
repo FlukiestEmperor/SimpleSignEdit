@@ -57,6 +57,7 @@ final class SignBlockListener extends BlockListener {
 		Block block = evt.getBlockPlaced();
 		if(block.getType() != Material.WALL_SIGN && block.getType() != Material.SIGN_POST) return;
 		if(signEdit.updates.containsKey(block.getLocation())) {
+			if(evt.isCancelled()) evt.setCancelled(false);
 			Sign updater = (Sign) block.getState();
 			Sign editing = (Sign) evt.getBlockAgainst().getState();
 			int i = 0;
