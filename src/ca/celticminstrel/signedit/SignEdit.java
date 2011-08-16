@@ -139,10 +139,9 @@ public class SignEdit extends JavaPlugin {
 	public void onDisable() {
 		//logger.info(ownership.toString());
 		Configuration config = getConfiguration();
-		@SuppressWarnings("rawtypes")
-		HashMap eraser = new HashMap();
-		config.setProperty("signs", eraser);
+		config.removeProperty("signs");
 		for(Location loc : ownership.keySet()) {
+			if(loc == null) continue;
 			Formatter fmt = new Formatter();
 			String locString = fmt.format("%s(%d,%d,%d)", loc.getWorld().getName(),
 					loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).toString();
@@ -157,7 +156,8 @@ public class SignEdit extends JavaPlugin {
 		PluginDescriptionFile pdfFile = this.getDescription();
 		logger.info(pdfFile.getFullName() + " enabled.");
 		getServer().getPluginManager().registerEvent(Type.SIGN_CHANGE, bl, Priority.Normal, this);
-		getServer().getPluginManager().registerEvent(Type.PLAYER_INTERACT, pl, Priority.Normal, this);
+		// TODO: Wonder if setting this to Highest would cause problems?
+		getServer().getPluginManager().registerEvent(Type.PLAYER_INTERACT, pl, Priority.Highest, this);
 		getServer().getPluginManager().registerEvent(Type.PLAYER_CHAT, pl, Priority.Normal, this);
 		getServer().getPluginManager().registerEvent(Type.ENTITY_DAMAGE, el, Priority.Normal, this);
 		getServer().getPluginManager().registerEvent(Type.BLOCK_BREAK, bl, Priority.Normal, this);

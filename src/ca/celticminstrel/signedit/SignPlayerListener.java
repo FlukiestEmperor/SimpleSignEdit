@@ -45,8 +45,8 @@ final class SignPlayerListener extends PlayerListener {
 					return;
 				}
 				if(source.getType() == Material.AIR) {
+					if(evt.isCancelled()) evt.setCancelled(false);
 					signEdit.updates.put(source.getLocation(), new SignUpdater(signEdit, target, source, player));
-					itemInHand.setAmount(itemInHand.getAmount()+1);
 				}
 			}
 		} else if(holding == Material.getMaterial(Option.VIEW_OWNER.get())) {

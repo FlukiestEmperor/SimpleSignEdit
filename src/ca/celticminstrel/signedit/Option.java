@@ -8,6 +8,7 @@ public abstract class Option {
 	public static OptionString SNEAKING = new OptionString("sneaking", "both");
 	public static OptionInteger VIEW_OWNER = new OptionInteger("view-owner", 280);
 	public static OptionInteger SET_OWNER = new OptionInteger("set-owner", 288);
+	public static OptionBoolean OPRHANED_BREAKABLE = new OptionBoolean("orphaned-breakable", false);
 	protected String node;
 	protected Object def;
 	protected static Configuration config;

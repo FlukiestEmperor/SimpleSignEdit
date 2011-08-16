@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 final class SignUpdater implements Runnable {
 	private final SignEdit signEdit;
@@ -36,5 +37,9 @@ final class SignUpdater implements Runnable {
 		for(int i = 0; i < 4; i++) targetState.setLine(i, lines[i]);
 		source.setType(Material.AIR);
 		signEdit.sendSignUpdate(target);
+		ItemStack itemInHand = setter.getItemInHand();
+		if(itemInHand == null || itemInHand.getType() == Material.AIR)
+			setter.setItemInHand(new ItemStack(Material.SIGN,1));
+		else itemInHand.setAmount(itemInHand.getAmount()+1);
 	}
 }
