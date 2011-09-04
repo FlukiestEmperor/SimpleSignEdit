@@ -43,7 +43,7 @@ final class SignBlockListener extends BlockListener {
 			if(Option.BREAK_PROTECT.get()) {
 				Player player = evt.getPlayer();
 				if(!signEdit.isOwnerOf(player, evt.getBlock().getLocation())) {
-					if(signEdit.getSignOwner(evt.getBlock()).equals("#") && Option.OPRHANED_BREAKABLE.get())
+					if(signEdit.getSignOwner(evt.getBlock()).equals("#") && Option.ORPHANED_BREAKABLE.get())
 						return; // Orphaned (ownerless) signs have been configured as being breakable by all
 					evt.setCancelled(true);
 					player.sendMessage("Sorry, you are not the owner of that sign.");
