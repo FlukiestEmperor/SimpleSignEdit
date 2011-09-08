@@ -209,6 +209,7 @@ public class SignEdit extends JavaPlugin {
 				Class.forName(Option.DB_CLASS.get());
 				db = DriverManager.getConnection(dbUrl, dbOptions);
 				try {
+					logger.info("[SimpleSignEdit] Checking for table...");
 					db.createStatement().execute(
 						"create table sign_ownership (" +
 							"world varchar(30) not null, " +
@@ -219,6 +220,7 @@ public class SignEdit extends JavaPlugin {
 							"primary key(world, x, y, z) " +
 						")"
 					);
+					logger.info("[SimpleSignEdit] Table created successfully!");
 				} catch(SQLException e) {
 					int type = db.getMetaData().getSQLStateType();
 					boolean error = true;
@@ -226,24 +228,25 @@ public class SignEdit extends JavaPlugin {
 					switch(type) {
 					// TODO: MSSQL apparently uses S0001?
 					case sqlStateXOpen:
-						message += "XOpen SQLState: " + e.getSQLState();
-						if(e.getSQLState() == null) break;
-						if(e.getSQLState().equals("42S01")) error = false;
+						message = "XOpen SQLState: " + e.getSQLState();
 						break;
 					case sqlStateSQL:
-						message += "SQL:2003 SQLState: " + e.getSQLState();
-						if(e.getSQLState() == null) break;
-						if(e.getSQLState().equals("42P07")) error = false;
+						message = "SQL:2003 SQLState: " + e.getSQLState();
 						break;
 					default:
 						message = "Unknown SQLState " + type + ": " + e.getSQLState();
 					}
-					if(e.getMessage().contains("table") && e.getMessage().contains("exist"))
+					if(e.getSQLState() == null);
+					else if(e.getSQLState().equals("42S01")) error = false;
+					else if(e.getSQLState().equals("42P07")) error = false;
+					if(e.getMessage().toLowerCase().contains("table") && e.getMessage().toLowerCase().contains("exist"))
 						error = false;
 					if(error) {
-						logger.info(e.getMessage() + "  [" + message + "]");
+						logger.warning(e.getMessage() + "  [" + message + "]");
 						e.printStackTrace();
-					}
+					} else logger.info("[SimpleSignEdit] Table found! (Error code was " + message +
+						"; feel free to post this line on the forum as it may help me improve the plugin; however," +
+						" this is not a bug)");
 				}
 			} catch(SQLException e) {
 				db = null;
@@ -475,6 +478,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 			countByKey.setInt(4, loc.getBlockZ());
 			if(countByKey.execute()) {
 				ResultSet set = countByKey.getResultSet();
+				set.next();
 				int count = set.getInt(1);
 				return count > 0;
 			}
@@ -601,3 +605,86 @@ class SignsMap implements Map<Location, String>, Runnable {
 		}
 	}
 }
+
+//A sort of combination between a map and a queue.
+//It allows multiple keys, but returns them in a FIFO order.
+//class UpdaterMap extends AbstractMap<Location,SignUpdater> {
+//	private Map<Location,Queue<SignUpdater>> map = new HashMap<Location,Queue<SignUpdater>>();
+//	private Map<Location,SignUpdater> cache = new HashMap<Location,SignUpdater>();
+//	
+//	@Override
+//	public void clear() {
+//		map.clear();
+//		cache.clear();
+//	}
+//	
+//	@Override
+//	public boolean containsKey(Object key) {
+//		return map.containsKey(key);
+//	}
+//	
+//	@Override
+//	public boolean containsValue(Object value) {
+//		if(cache.containsValue(value)) return true;
+//		for(Queue<SignUpdater> val : map.values())
+//			if(val.contains(value)) return true;
+//		return false;
+//	}
+//	
+//	@Override
+//	public Set<Map.Entry<Location,SignUpdater>> entrySet() {
+//		return cache.entrySet();
+//	}
+//	
+//	@Override
+//	public SignUpdater get(Object key) {
+//		if(cache.containsKey(key)) return cache.get(key);
+//		if(map.containsKey(key)) {
+//			SignUpdater updater = map.get(key).peek();
+//			cache.put((Location)key, updater);
+//			return updater;
+//		}
+//		return null;
+//	}
+//	
+//	@Override
+//	public boolean isEmpty() {
+//		return map.isEmpty();
+//	}
+//	
+//	@Override
+//	public Set<Location> keySet() {
+//		return cache.keySet();
+//	}
+//	
+//	@Override
+//	public SignUpdater put(Location key, SignUpdater value) {
+//		if(!map.containsKey(key))
+//			map.put(key, new LinkedList<SignUpdater>());
+//		map.get(key).add(value);
+//		return null;
+//	}
+//	
+//	@Override
+//	public SignUpdater remove(Object key) {
+//		if(!map.containsKey(key)) return cache.remove(key);
+//		Queue<SignUpdater> queue = map.get(key);
+//		SignUpdater updater = queue.poll();
+//		cache.put((Location)key, queue.peek());
+//		if(queue.isEmpty()) map.remove(key);
+//		return updater;
+//	}
+//	
+//	@Override
+//	public int size() {
+//		return map.size();
+//	}
+//	
+//	@Override
+//	public Collection<SignUpdater> values() {
+//		Collection<SignUpdater> values = new LinkedList<SignUpdater>();
+//		for(Location loc : map.keySet())
+//			values.addAll(map.get(loc));
+//		return values;
+//	}
+//}
