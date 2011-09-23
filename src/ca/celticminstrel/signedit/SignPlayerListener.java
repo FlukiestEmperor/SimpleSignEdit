@@ -1,5 +1,6 @@
 package ca.celticminstrel.signedit;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -54,6 +55,15 @@ final class SignPlayerListener extends PlayerListener {
 			player.sendMessage("That sign is owned by " + signEdit.getOwnerOf(target));
 		} else if(holding == Material.getMaterial(Option.SET_OWNER.get())) {
 			if(clicked != Material.WALL_SIGN && clicked != Material.SIGN_POST) return;
+			if(signEdit.ownerSetting.containsKey(player.getName())) {
+				Location loc = signEdit.ownerSetting.get(player.getName());
+				if(loc.equals(target.getLocation())) {
+					signEdit.setSignOwner(loc, player.getName());
+					player.sendMessage("Owner set to " + player.getName());
+					signEdit.ownerSetting.remove(player.getName());
+					return;
+				}
+			}
 			if(!signEdit.canSetOwner(player)) {
 				evt.setCancelled(true);
 				player.sendMessage("Sorry, you do not have permission to set the owner of signs.");
