@@ -58,9 +58,9 @@ public class SignEdit extends JavaPlugin {
 		if(owner == null) owner = "#";
 		String oldOwner = ownership.get(owner);
 		if(oldOwner == null) oldOwner = "#";
-		if(owner.equalsIgnoreCase(oldOwner)) return false;
 		if(owner.equals("#")) ownership.remove(whichSign);
 		else ownership.put(whichSign, owner);
+		if(owner.equalsIgnoreCase(oldOwner)) return false;
 		return true;
 	}
 
