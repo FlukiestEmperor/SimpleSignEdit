@@ -27,6 +27,7 @@ final class SignBlockListener extends BlockListener {
 			//logger.info("Editing sign at " + loc);
 			signEdit.updates.get(loc).setLines(evt.getLines()).run();
 			signEdit.updates.remove(loc);
+			evt.setCancelled(true);
 		} else if(!signEdit.isSignOwned(loc)) {
 			//logger.info("Placing sign at " + loc);
 			signEdit.setSignOwner(loc, setter.getName());
