@@ -7,8 +7,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,6 +18,8 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
@@ -29,7 +31,6 @@ import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
 import org.bukkit.ChatColor;
 
 public class SignEdit extends JavaPlugin {
@@ -147,16 +148,16 @@ public class SignEdit extends JavaPlugin {
 	public void onDisable() {
 		if(db == null) {
 			logger.info("[SimpleSignEdit] Saving ownership to config.yml...");
-			Configuration config = getConfiguration();
-			config.removeProperty("signs");
+			FileConfiguration config = getConfig();
+			config.set("signs", null); // TODO: Is this really removal?
 			for(Location loc : ownership.keySet()) {
 				if(loc == null) continue;
 				Formatter fmt = new Formatter();
 				String locString = fmt.format("%s(%d,%d,%d)", loc.getWorld().getName(),
 						loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).toString();
-				config.setProperty("signs." + locString, ownership.get(loc));
+				config.set("signs." + locString, ownership.get(loc));
 			}
-			config.save();
+			saveConfig();
 		} else {
 			try {
 				db.close();
@@ -173,7 +174,7 @@ public class SignEdit extends JavaPlugin {
 				e.printStackTrace();
 			}
 		}
-		if(Option.AUTO_SAVE.get()) getConfiguration().save();
+		if(Option.AUTO_SAVE.get()) saveConfig();
 		logger.info("Disabled " + getDescription().getFullName());
 	}
 
@@ -188,12 +189,12 @@ public class SignEdit extends JavaPlugin {
 		getServer().getPluginManager().registerEvent(Type.ENTITY_DAMAGE, el, Priority.Normal, this);
 		getServer().getPluginManager().registerEvent(Type.BLOCK_BREAK, bl, Priority.Normal, this);
 		getServer().getPluginManager().registerEvent(Type.BLOCK_PLACE, bl, Priority.Highest, this);
-		Configuration config = getConfiguration();
-		config.load();
+		FileConfiguration config = getConfig();
 		Option.setConfiguration(config);
 		Properties dbOptions = new Properties();
-		if(config.getNode("database.options") != null) {
-			List<String> keys = config.getKeys("database.options");
+		ConfigurationSection dboptSection = config.getConfigurationSection("database.options");
+		if(dboptSection != null) {
+			Set<String> keys = dboptSection.getKeys(false);
 			for(String key : keys) dbOptions.setProperty(key, config.getString("database.options." + key));
 		}
 		String dbUrl = Option.DATABASE.get();
@@ -261,7 +262,7 @@ public class SignEdit extends JavaPlugin {
 			dbUpdater.start();
 		}
 		// Compatibility with past versions
-		List<String> keys = config.getKeys("signs");
+		Set<String> keys = config.getConfigurationSection("signs").getKeys(false);
 		if(keys != null && !keys.isEmpty()) {
 			if(db != null)
 				logger.info("[SimpleSignEdit] Converting your old sign ownerships from the config format to the database format...");
@@ -277,8 +278,8 @@ public class SignEdit extends JavaPlugin {
 				ownership.put(key, config.getString("signs." + loc));
 			}
 			if(db != null) {
-				config.removeProperty("signs");
-				config.save();
+				config.set("signs",null); // TODO: Is this a true removal?
+				saveConfig();
 			}
 		}
 		

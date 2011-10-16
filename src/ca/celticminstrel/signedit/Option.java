@@ -1,6 +1,6 @@
 package ca.celticminstrel.signedit;
 
-import org.bukkit.util.config.Configuration;
+import org.bukkit.configuration.file.FileConfiguration;
 
 public abstract class Option {
 	public static OptionBoolean ALLOW_STACKING = new OptionBoolean("allow-stacking", true);
@@ -14,7 +14,7 @@ public abstract class Option {
 	public static OptionBoolean AUTO_SAVE = new OptionBoolean("auto-save",true);
 	protected String node;
 	protected Object def;
-	protected static Configuration config;
+	protected static FileConfiguration config;
 	
 	@SuppressWarnings("hiding")
 	protected Option(String node, Object def) {
@@ -25,14 +25,14 @@ public abstract class Option {
 	public abstract Object get();
 	
 	public void set(Object value) {
-		config.setProperty(node, value);
+		config.set(node, value);
 	}
 	
 	public void reset() {
 		set(def);
 	}
 	
-	public static void setConfiguration(Configuration c) {
+	public static void setConfiguration(FileConfiguration c) {
 		config = c;
 	}
 	
