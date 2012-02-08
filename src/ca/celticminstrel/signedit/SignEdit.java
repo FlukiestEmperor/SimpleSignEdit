@@ -252,7 +252,8 @@ public class SignEdit extends JavaPlugin {
 			dbUpdater.start();
 		}
 		// Compatibility with past versions
-		Set<String> keys = config.getConfigurationSection("signs").getKeys(false);
+		ConfigurationSection signs = config.getConfigurationSection("signs");
+		Set<String> keys = signs == null ? null : signs.getKeys(false);
 		if(keys != null && !keys.isEmpty()) {
 			if(db != null)
 				logger.info("[SimpleSignEdit] Converting your old sign ownerships from the config format to the database format...");
