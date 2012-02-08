@@ -30,7 +30,11 @@ final class SignBlockListener extends BlockListener {
 			evt.setCancelled(true);
 		} else if(!signEdit.isSignOwned(loc)) {
 			//logger.info("Placing sign at " + loc);
-			signEdit.setSignOwner(loc, setter.getName());
+			String owner = null, dflt = Option.DEFAULT_OWNER.get();
+			if(dflt.equalsIgnoreCase("placer")) owner = setter.getName();
+			else if(dflt.equalsIgnoreCase("none")) owner = "#";
+			else if(dflt.equals("*")) owner = "*";
+			signEdit.setSignOwner(loc, owner);
 		}
 	}
 	

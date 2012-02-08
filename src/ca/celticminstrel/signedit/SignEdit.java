@@ -324,11 +324,11 @@ public class SignEdit extends JavaPlugin {
 	}
 	
 	String parseColour(String line, Player setter) {
-		String regex = "&(?<!&&)(?=%s)";
+		String regex = "&(?<!&&)(?=%c)";
 		Formatter fmt;
 		for(ChatColor clr : ChatColor.values()) {
 			if(!hasColour(setter, clr)) continue;
-			String code = Integer.toHexString(clr.getCode());
+			char code = clr.getChar();
 			fmt = new Formatter();
 			line = line.replaceAll(fmt.format(regex, code).toString(), "\u00A7");
 		}

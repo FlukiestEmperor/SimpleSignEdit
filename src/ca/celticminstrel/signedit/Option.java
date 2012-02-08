@@ -12,6 +12,7 @@ public abstract class Option {
 	public static OptionString DATABASE = new OptionString("database.url","jdbc:sqlite:plugins/SimpleSignEdit/signs.db");
 	public static OptionString DB_CLASS = new OptionString("database.class","org.sqlite.JDBC");
 	public static OptionBoolean AUTO_SAVE = new OptionBoolean("auto-save",true);
+	public static OptionString DEFAULT_OWNER = new OptionString("default-owner", "placer");
 	protected String node;
 	protected Object def;
 	protected static FileConfiguration config;

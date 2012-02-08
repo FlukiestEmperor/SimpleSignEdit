@@ -1,4 +1,7 @@
 .DS_Store
+.classpath
+.eclipse-build
+.project
 lib
 target
 test.sh
