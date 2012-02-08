@@ -21,11 +21,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event.Type;
-import org.bukkit.event.block.BlockListener;
-import org.bukkit.event.entity.EntityListener;
-import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -36,9 +32,8 @@ import org.bukkit.ChatColor;
 public class SignEdit extends JavaPlugin {
 	private static Pattern locpat = Pattern.compile("([^(]+)\\((-?\\d+),(-?\\d+),(-?\\d+)\\)");
 	Logger logger = Logger.getLogger("Minecraft.SignEdit");
-	private BlockListener bl = new SignBlockListener(this);
-	private PlayerListener pl = new SignPlayerListener(this);
-	private EntityListener el = new SignEntityListener(this);
+	private Listener signL = new SignListener(this);
+	private Listener ownerL = new OwnerListener(this);
 	HashMap<Location,SignUpdater> updates = new HashMap<Location,SignUpdater>();
 	private SignsMap ownership;
 	HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
@@ -182,13 +177,8 @@ public class SignEdit extends JavaPlugin {
 	public void onEnable() {
 		PluginDescriptionFile pdfFile = this.getDescription();
 		logger.info(pdfFile.getFullName() + " enabled.");
-		getServer().getPluginManager().registerEvent(Type.SIGN_CHANGE, bl, Priority.Normal, this);
-		// TODO: Wonder if setting this to Highest would cause problems?
-		getServer().getPluginManager().registerEvent(Type.PLAYER_INTERACT, pl, Priority.Highest, this);
-		getServer().getPluginManager().registerEvent(Type.PLAYER_CHAT, pl, Priority.Normal, this);
-		getServer().getPluginManager().registerEvent(Type.ENTITY_DAMAGE, el, Priority.Normal, this);
-		getServer().getPluginManager().registerEvent(Type.BLOCK_BREAK, bl, Priority.Normal, this);
-		getServer().getPluginManager().registerEvent(Type.BLOCK_PLACE, bl, Priority.Highest, this);
+		getServer().getPluginManager().registerEvents(signL, this);
+		getServer().getPluginManager().registerEvents(ownerL, this);
 		FileConfiguration config = getConfig();
 		Option.setConfiguration(config);
 		Properties dbOptions = new Properties();
