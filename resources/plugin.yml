@@ -3,7 +3,7 @@ main: ca.celticminstrel.signedit.SignEdit
 authors:
   - Celtic Minstrel
 version: 1.8.2
-softdepend: LWC
+softdepend: [LWC]
 permissions:
   simplesignedit.edit:
     description: Allows you to edit signs by right-clicking while holding a sign.
