@@ -160,7 +160,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 		try {
 			countByValue.setString(1, str);
 			if(countByValue.execute()) {
-				ResultSet set = countByKey.getResultSet();
+				ResultSet set = countByValue.getResultSet();
 				set.next();
 				int count = set.getInt(1);
 				return count > 0;
