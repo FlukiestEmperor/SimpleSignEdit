@@ -33,48 +33,51 @@ class SignsMap implements Map<Location, String>, Runnable {
 			try {
 				Class.forName(Option.DB_CLASS.get());
 				db = DriverManager.getConnection(dbUrl, dbOptions);
-				try {
-					logger.info("Checking for table...");
-					// TODO: Apparently you can add /* if not exists */ to avoid an error on some drivers
-					// How portable is this?
-					db.createStatement().execute(
-						"create table sign_ownership (" +
-							"world varchar(30) not null, " +
-							"x integer not null, " +
-							"y integer not null, " +
-							"z integer not null, " +
-							"owner varchar(30) not null, " +
-							"primary key(world, x, y, z) " +
-						")"
-					);
-					logger.info("Table created successfully!");
-				} catch(SQLException e) {
-					int type = db.getMetaData().getSQLStateType();
-					boolean error = true;
-					String message = "";
-					switch(type) {
-					// TODO: MSSQL apparently uses S0001?
-					case sqlStateXOpen:
-						message = "XOpen SQLState: " + e.getSQLState();
-						break;
-					case sqlStateSQL:
-						message = "SQL:2003 SQLState: " + e.getSQLState();
-						break;
-					default:
-						message = "Unknown SQLState " + type + ": " + e.getSQLState();
+				logger.info("Checking for table...");
+				ResultSet tables = db.getMetaData().getTables(db.getCatalog(), null, "sign_ownership", null);
+				if(!tables.next()) {
+					try {
+						// TODO: Apparently you can add /* if not exists */ to avoid an error on some drivers
+						// How portable is this?
+						db.createStatement().execute(
+							"create table sign_ownership (" +
+								"world varchar(30) not null, " +
+								"x integer not null, " +
+								"y integer not null, " +
+								"z integer not null, " +
+								"owner varchar(30) not null, " +
+								"primary key(world, x, y, z) " +
+							")"
+						);
+						logger.info("Table created successfully!");
+					} catch(SQLException e) {
+						int type = db.getMetaData().getSQLStateType();
+						boolean error = true;
+						String message = "";
+						switch(type) {
+						case sqlStateXOpen:
+							message = "XOpen SQLState: " + e.getSQLState();
+							break;
+						case sqlStateSQL:
+							message = "SQL:2003 SQLState: " + e.getSQLState();
+							break;
+						default:
+							message = "Unknown SQLState " + type + ": " + e.getSQLState();
+						}
+						if(e.getSQLState() == null);
+						else if(e.getSQLState().equals("42S01")) error = false;
+						else if(e.getSQLState().equals("42P07")) error = false;
+						else if(e.getSQLState().equals("S0001")) error = false;
+						if(e.getMessage().toLowerCase().contains("table") && e.getMessage().toLowerCase().contains("exist"))
+							error = false;
+						if(error) {
+							logger.warning(e.getMessage() + "  [" + message + "]");
+							e.printStackTrace();
+						} else logger.info("The table could not be created; most likely this is because it" +
+								"already exists, but if you experience loss of data, report the following" +
+								"error code: [" + message + "]");
 					}
-					if(e.getSQLState() == null);
-					else if(e.getSQLState().equals("42S01")) error = false;
-					else if(e.getSQLState().equals("42P07")) error = false;
-					if(e.getMessage().toLowerCase().contains("table") && e.getMessage().toLowerCase().contains("exist"))
-						error = false;
-					if(error) {
-						logger.warning(e.getMessage() + "  [" + message + "]");
-						e.printStackTrace();
-					} else logger.info("Table found! (Error code was " + message +
-						"; feel free to post this line on the forum as it may help me improve the plugin; however," +
-						" this is not a bug)");
-				}
+				} else logger.info("Table found!");
 			} catch(SQLException e) {
 				db = null;
 				logger.info("Failed to load database from '" + dbUrl + "'!");
