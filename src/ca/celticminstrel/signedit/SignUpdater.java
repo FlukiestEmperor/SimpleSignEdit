@@ -1,5 +1,6 @@
 package ca.celticminstrel.signedit;
 
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -37,9 +38,11 @@ final class SignUpdater implements Runnable {
 		for(int i = 0; i < 4; i++) targetState.setLine(i, lines[i]);
 		source.setType(Material.AIR);
 		signEdit.sendSignUpdate(target);
-		ItemStack itemInHand = setter.getItemInHand();
-		if(itemInHand == null || itemInHand.getType() == Material.AIR)
-			setter.setItemInHand(new ItemStack(Material.SIGN,1));
-		else itemInHand.setAmount(itemInHand.getAmount()+1);
+		if(setter.getGameMode() != GameMode.CREATIVE) {
+			ItemStack itemInHand = setter.getItemInHand();
+			if(itemInHand == null || itemInHand.getType() == Material.AIR)
+				setter.setItemInHand(new ItemStack(Material.SIGN,1));
+			else itemInHand.setAmount(itemInHand.getAmount()+1);
+		}
 	}
 }
