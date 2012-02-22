@@ -1,5 +1,10 @@
 package ca.celticminstrel.signedit;
 
+import static java.sql.DatabaseMetaData.sqlStateSQL;
+import static java.sql.DatabaseMetaData.sqlStateXOpen;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,8 +12,10 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.bukkit.Location;
 
@@ -18,6 +25,68 @@ class SignsMap implements Map<Location, String>, Runnable {
 	private SignEdit plugin;
 	public volatile boolean done = false;
 	private PreparedStatement select, countByKey, countByValue;
+	
+	public static Connection setup(Logger logger, Properties dbOptions) {
+		Connection db;
+		String dbUrl = Option.DATABASE.get();
+		if(!dbUrl.equalsIgnoreCase("yaml")) {
+			try {
+				Class.forName(Option.DB_CLASS.get());
+				db = DriverManager.getConnection(dbUrl, dbOptions);
+				try {
+					logger.info("[SimpleSignEdit] Checking for table...");
+					// TODO: Apparently you can add /* if not exists */ to avoid an error on some drivers
+					// How portable is this?
+					db.createStatement().execute(
+						"create table sign_ownership (" +
+							"world varchar(30) not null, " +
+							"x integer not null, " +
+							"y integer not null, " +
+							"z integer not null, " +
+							"owner varchar(30) not null, " +
+							"primary key(world, x, y, z) " +
+						")"
+					);
+					logger.info("[SimpleSignEdit] Table created successfully!");
+				} catch(SQLException e) {
+					int type = db.getMetaData().getSQLStateType();
+					boolean error = true;
+					String message = "";
+					switch(type) {
+					// TODO: MSSQL apparently uses S0001?
+					case sqlStateXOpen:
+						message = "XOpen SQLState: " + e.getSQLState();
+						break;
+					case sqlStateSQL:
+						message = "SQL:2003 SQLState: " + e.getSQLState();
+						break;
+					default:
+						message = "Unknown SQLState " + type + ": " + e.getSQLState();
+					}
+					if(e.getSQLState() == null);
+					else if(e.getSQLState().equals("42S01")) error = false;
+					else if(e.getSQLState().equals("42P07")) error = false;
+					if(e.getMessage().toLowerCase().contains("table") && e.getMessage().toLowerCase().contains("exist"))
+						error = false;
+					if(error) {
+						logger.warning(e.getMessage() + "  [" + message + "]");
+						e.printStackTrace();
+					} else logger.info("[SimpleSignEdit] Table found! (Error code was " + message +
+						"; feel free to post this line on the forum as it may help me improve the plugin; however," +
+						" this is not a bug)");
+				}
+			} catch(SQLException e) {
+				db = null;
+				logger.info("Failed to load database from '" + dbUrl + "'!");
+				e.printStackTrace();
+			} catch(ClassNotFoundException e) {
+				db = null;
+				logger.info("Could not load class '" + Option.DB_CLASS.get() + "' for the database!");
+				e.printStackTrace();
+			}
+		} else db = null;
+		return db;
+	}
 
 	public SignsMap(SignEdit signEdit) {
 		plugin = signEdit;
