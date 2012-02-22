@@ -1,6 +1,6 @@
 package ca.celticminstrel.signedit;
 
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.Configuration;
 
 public abstract class Option {
 	public static OptionBoolean ALLOW_STACKING = new OptionBoolean("allow-stacking", true);
@@ -15,7 +15,7 @@ public abstract class Option {
 	public static OptionString DEFAULT_OWNER = new OptionString("default-owner", "placer");
 	protected String node;
 	protected Object def;
-	protected static FileConfiguration config;
+	private static Configuration config;
 	
 	@SuppressWarnings("hiding")
 	protected Option(String node, Object def) {
@@ -33,73 +33,45 @@ public abstract class Option {
 		set(def);
 	}
 	
-	public static void setConfiguration(FileConfiguration c) {
+	public static void setConfiguration(Configuration c) {
 		config = c;
 	}
 	
-	public static class OptionBoolean extends Option {
+	protected Configuration setDefault() {
+		if(config.get(node) == null) config.set(node, def);
+		return config;
+	}
+}
+
+class OptionBoolean extends Option {
 		@SuppressWarnings("hiding") OptionBoolean(String node, boolean def) {
 			super(node, def);
 		}
 
 		@Override
 		public Boolean get() {
-			return config.getBoolean(node, (Boolean) def);
+		return setDefault().getBoolean(node, (Boolean) def);
 		}
 	}
 
-	public static class OptionString extends Option {
+class OptionString extends Option {
 		@SuppressWarnings("hiding") OptionString(String node, String def) {
 			super(node, def);
 		}
 
 		@Override
 		public String get() {
-			return config.getString(node, (String) def);
+		return setDefault().getString(node, (String) def);
 		}
 	}
 
-	public static class OptionInteger extends Option {
+class OptionInteger extends Option {
 		@SuppressWarnings("hiding") OptionInteger(String node, int def) {
 			super(node, def);
 		}
 
 		@Override
 		public Integer get() {
-			return config.getInt(node, (Integer) def);
-		}
+		return setDefault().getInt(node, (Integer) def);
 	}
-//
-//	public static class OptionDouble extends Option {
-//		@SuppressWarnings("hiding") OptionDouble(String node, double def) {
-//			super(node, def);
-//		}
-//
-//		@Override
-//		public Double get() {
-//			return config.getDouble(node, (Double) def);
-//		}
-//	}
-//
-//	public static class OptionStringList extends Option {
-//		@SuppressWarnings("hiding") OptionStringList(String node, List<String> def) {
-//			super(node, def);
-//		}
-//
-//		@Override@SuppressWarnings("unchecked")
-//		public List<String> get() {
-//			return config.getStringList(node, (List<String>) def);
-//		}
-//	}
-//
-//	public static class OptionIntegerList extends Option {
-//		@SuppressWarnings("hiding") OptionIntegerList(String node, List<Integer> def) {
-//			super(node, def);
-//		}
-//
-//		@Override@SuppressWarnings("unchecked")
-//		public List<Integer> get() {
-//			return config.getIntList(node, (List<Integer>) def);
-//		}
-//	}
 }
