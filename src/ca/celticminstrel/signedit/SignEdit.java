@@ -38,7 +38,7 @@ public class SignEdit extends JavaPlugin {
 	public static final String PUBLIC = "*";
 	public static final String NO_OWNER = "#";
 	private static Pattern locpat = Pattern.compile("([^(]+)\\((-?\\d+),(-?\\d+),(-?\\d+)\\)");
-	Logger logger = Logger.getLogger("Minecraft.SignEdit");
+	Logger logger;
 	private Listener signL = new SignListener(this);
 	private Listener ownerL = new OwnerListener(this);
 	private LWC lwc;
@@ -193,7 +193,7 @@ public class SignEdit extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		if(db == null) {
-			logger.info("[SimpleSignEdit] Saving ownership to config.yml...");
+			logger.info("Saving ownership to config.yml...");
 			FileConfiguration config = getConfig();
 			config.set("signs", null); // TODO: Is this really removal?
 			for(Location loc : ownership.keySet()) {
@@ -228,8 +228,7 @@ public class SignEdit extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		PluginDescriptionFile pdfFile = this.getDescription();
-		logger.info(pdfFile.getFullName() + " enabled.");
+		logger = getLogger();
 		getServer().getPluginManager().registerEvents(signL, this);
 		getServer().getPluginManager().registerEvents(ownerL, this);
 		FileConfiguration config = getConfig();
@@ -257,7 +256,7 @@ public class SignEdit extends JavaPlugin {
 		Set<String> keys = signs == null ? null : signs.getKeys(false);
 		if(keys != null && !keys.isEmpty()) {
 			if(db != null)
-				logger.info("[SimpleSignEdit] Converting your old sign ownerships from the config format to the database format...");
+				logger.info("Converting your old sign ownerships from the config format to the database format...");
 			for(String loc : keys) {
 				Matcher m = locpat.matcher(loc);
 				if(!m.matches()) {
@@ -302,6 +301,8 @@ public class SignEdit extends JavaPlugin {
 			colours
 		);
 		pm.addPermission(perm);
+		PluginDescriptionFile pdfFile = this.getDescription();
+		logger.info(pdfFile.getFullName() + " enabled.");
 	}
 	
 	void sendSignUpdate(Block signBlock) {

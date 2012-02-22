@@ -34,7 +34,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 				Class.forName(Option.DB_CLASS.get());
 				db = DriverManager.getConnection(dbUrl, dbOptions);
 				try {
-					logger.info("[SimpleSignEdit] Checking for table...");
+					logger.info("Checking for table...");
 					// TODO: Apparently you can add /* if not exists */ to avoid an error on some drivers
 					// How portable is this?
 					db.createStatement().execute(
@@ -47,7 +47,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 							"primary key(world, x, y, z) " +
 						")"
 					);
-					logger.info("[SimpleSignEdit] Table created successfully!");
+					logger.info("Table created successfully!");
 				} catch(SQLException e) {
 					int type = db.getMetaData().getSQLStateType();
 					boolean error = true;
@@ -71,7 +71,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 					if(error) {
 						logger.warning(e.getMessage() + "  [" + message + "]");
 						e.printStackTrace();
-					} else logger.info("[SimpleSignEdit] Table found! (Error code was " + message +
+					} else logger.info("Table found! (Error code was " + message +
 						"; feel free to post this line on the forum as it may help me improve the plugin; however," +
 						" this is not a bug)");
 				}
