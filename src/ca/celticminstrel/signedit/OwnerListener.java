@@ -38,14 +38,14 @@ final class OwnerListener implements Listener {
 		if(!signEdit.ownerSetting.containsKey(player.getName())) return;
 		String[] split = evt.getMessage().trim().split("\\s+");
 		split[0] = split[0].trim();
-		if(split[0].equals("@")) {
+		if(split[0].equals(SignEdit.ME)) {
 			signEdit.setSignOwner(signEdit.ownerSetting.get(player.getName()), player.getName());
 			player.sendMessage("Owner set to " + player.getName());
 		} else {
 			signEdit.setSignOwner(signEdit.ownerSetting.get(player.getName()), split[0]);
 			String who = split[0];
-			if(split[0].equals("#")) who = "no-one";
-			else if(split[0].equals("*")) who = "everyone";
+			if(split[0].equals(SignEdit.NO_OWNER)) who = "no-one";
+			else if(split[0].equals(SignEdit.PUBLIC)) who = "everyone";
 			player.sendMessage("Owner set to " + who);
 			player.sendMessage("(Note: if no player by that name exists, no-one will be able to edit this sign.)");
 		}

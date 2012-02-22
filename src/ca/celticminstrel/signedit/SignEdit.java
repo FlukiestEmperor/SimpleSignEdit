@@ -13,8 +13,14 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.griefcraft.lwc.LWC;
+import com.griefcraft.lwc.LWCPlugin;
+import com.griefcraft.model.Protection;
+import com.griefcraft.model.Protection.Type;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -24,16 +30,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.ChatColor;
 
 public class SignEdit extends JavaPlugin {
+	public static final String ME = "@";
+	public static final String PUBLIC = "*";
+	public static final String NO_OWNER = "#";
 	private static Pattern locpat = Pattern.compile("([^(]+)\\((-?\\d+),(-?\\d+),(-?\\d+)\\)");
 	Logger logger = Logger.getLogger("Minecraft.SignEdit");
 	private Listener signL = new SignListener(this);
 	private Listener ownerL = new OwnerListener(this);
+	private LWC lwc;
 	HashMap<Location,SignUpdater> updates = new HashMap<Location,SignUpdater>();
 	private SignsMap ownership;
 	HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
@@ -50,11 +61,18 @@ public class SignEdit extends JavaPlugin {
 	 */
 	public boolean setSignOwner(Location whichSign, String owner) {
 		Material sign = whichSign.getWorld().getBlockAt(whichSign).getType();
-		if(sign != Material.SIGN_POST && sign != Material.WALL_SIGN) return false;
-		if(owner == null) owner = "#";
-		String oldOwner = ownership.get(owner);
-		if(oldOwner == null) oldOwner = "#";
-		if(owner.equals("#")) ownership.remove(whichSign);
+		if(sign != Material.SIGN_POST && sign != Material.WALL_SIGN) {
+			ownership.remove(whichSign);
+			return false;
+		}
+		String oldOwner = getSignOwner(whichSign);
+		if(oldOwner == null) oldOwner = NO_OWNER;
+		if(lwc != null) {
+			if(owner.equals(PUBLIC)) lwcSetPublic(whichSign);
+			else lwcSetOwner(whichSign, owner);
+		}
+		if(owner == null) owner = NO_OWNER;
+		if(owner.equals(NO_OWNER)) ownership.remove(whichSign);
 		else ownership.put(whichSign, owner);
 		if(owner.equalsIgnoreCase(oldOwner)) return false;
 		return true;
@@ -78,10 +96,12 @@ public class SignEdit extends JavaPlugin {
 	 * @return The sign's current owner; "#" means no-one, "*" means everyone.
 	 */
 	public String getSignOwner(Location whichSign) {
+		String owner = null;
+		if(lwc != null) owner = lwcGetOwner(whichSign);
+		if(owner != null) return owner;
 		if(ownership.containsKey(whichSign))
 			return ownership.get(whichSign);
-		else return "#";
-			
+		else return NO_OWNER;
 	}
 
 	/**
@@ -99,7 +119,7 @@ public class SignEdit extends JavaPlugin {
 	 * @return True if the sign is owned by someone (or everyone), false if it is owned by no-one.
 	 */
 	public boolean isSignOwned(Location whichSign) {
-		return !getSignOwner(whichSign).equals("#");
+		return !getSignOwner(whichSign).equals(NO_OWNER);
 	}
 	
 	/**
@@ -108,7 +128,41 @@ public class SignEdit extends JavaPlugin {
 	 * @return True if the sign is owned by someone (or everyone), false if it is owned by no-one.
 	 */
 	public boolean isSignOwned(Block whichSign) {
-		return !getSignOwner(whichSign).equals("#");
+		return !getSignOwner(whichSign).equals(NO_OWNER);
+	}
+
+	private void lwcSetPublic(Location whichSign) {
+		Protection prot = lwc.findProtection(whichSign.getBlock());
+		if(prot != null) prot.remove();
+	}
+
+	private void lwcSetOwner(Location whichSign, String owner) {
+		Protection prot = lwc.findProtection(whichSign.getBlock());
+		if(prot == null) {
+			World world = whichSign.getWorld();
+			int blockId = world.getBlockTypeIdAt(whichSign);
+			int x = whichSign.getBlockX();
+			int y = whichSign.getBlockY();
+			int z = whichSign.getBlockZ();
+			// create the protection
+			lwc.getPhysicalDatabase().registerProtection(blockId, Type.PRIVATE, world.getName(), owner, "", x, y, z);
+		} else prot.setOwner(owner.equals(NO_OWNER) ? "" : owner);
+	}
+	
+	private String lwcGetOwner(Location whichSign) {
+		Protection prot = lwc.findProtection(whichSign.getBlock());
+		if(prot != null) {
+			String owner = prot.getOwner();
+			if(owner.isEmpty()) owner = NO_OWNER;
+			String myOwner = ownership.get(whichSign);
+			if(myOwner == null) myOwner = NO_OWNER;
+			if(!myOwner.equals(owner)) {
+				if(owner.equals(NO_OWNER)) ownership.remove(whichSign);
+				else ownership.put(whichSign, owner);
+			}
+			return owner;
+		}
+		return null;
 	}
 
 	boolean hasPermission(Player who) {
@@ -126,11 +180,11 @@ public class SignEdit extends JavaPlugin {
 	}
 	
 	boolean isOwnerOf(Player player, Location location) {
-		String owner = ownership.get(location);
+		String owner = getSignOwner(location);
 		boolean canEditAll = player.hasPermission("simplesignedit.edit.all");
 		if(owner == null) return canEditAll;
 		if(owner.equalsIgnoreCase(player.getName())) return true;
-		if(owner.equals("*")) return true;
+		if(owner.equals(PUBLIC)) return true;
 		return canEditAll;
 	}
 	
@@ -186,6 +240,12 @@ public class SignEdit extends JavaPlugin {
 		if(dboptSection != null) {
 			Set<String> keys = dboptSection.getKeys(false);
 			for(String key : keys) dbOptions.setProperty(key, config.getString("database.options." + key));
+		}
+		if(Option.USE_LWC.get()) {
+			Plugin lwcPlugin = getServer().getPluginManager().getPlugin("LWC");
+			if(lwcPlugin != null) {
+			    lwc = ((LWCPlugin) lwcPlugin).getLWC();
+			}
 		}
 		String dbUrl = Option.DATABASE.get();
 		if(!dbUrl.equalsIgnoreCase("yaml")) {
@@ -330,90 +390,7 @@ public class SignEdit extends JavaPlugin {
 	String getOwnerOf(Block block) {
 		String owner = ownership.get(block.getLocation());
 		if(owner == null) return "no-one";
-		if(owner.equals("*")) return "everyone";
+		if(owner.equals(PUBLIC)) return "everyone";
 		return owner;
 	}
 }
-
-//A sort of combination between a map and a queue.
-//It allows multiple keys, but returns them in a FIFO order.
-//class UpdaterMap extends AbstractMap<Location,SignUpdater> {
-//	private Map<Location,Queue<SignUpdater>> map = new HashMap<Location,Queue<SignUpdater>>();
-//	private Map<Location,SignUpdater> cache = new HashMap<Location,SignUpdater>();
-//	
-//	@Override
-//	public void clear() {
-//		map.clear();
-//		cache.clear();
-//	}
-//	
-//	@Override
-//	public boolean containsKey(Object key) {
-//		return map.containsKey(key);
-//	}
-//	
-//	@Override
-//	public boolean containsValue(Object value) {
-//		if(cache.containsValue(value)) return true;
-//		for(Queue<SignUpdater> val : map.values())
-//			if(val.contains(value)) return true;
-//		return false;
-//	}
-//	
-//	@Override
-//	public Set<Map.Entry<Location,SignUpdater>> entrySet() {
-//		return cache.entrySet();
-//	}
-//	
-//	@Override
-//	public SignUpdater get(Object key) {
-//		if(cache.containsKey(key)) return cache.get(key);
-//		if(map.containsKey(key)) {
-//			SignUpdater updater = map.get(key).peek();
-//			cache.put((Location)key, updater);
-//			return updater;
-//		}
-//		return null;
-//	}
-//	
-//	@Override
-//	public boolean isEmpty() {
-//		return map.isEmpty();
-//	}
-//	
-//	@Override
-//	public Set<Location> keySet() {
-//		return cache.keySet();
-//	}
-//	
-//	@Override
-//	public SignUpdater put(Location key, SignUpdater value) {
-//		if(!map.containsKey(key))
-//			map.put(key, new LinkedList<SignUpdater>());
-//		map.get(key).add(value);
-//		return null;
-//	}
-//	
-//	@Override
-//	public SignUpdater remove(Object key) {
-//		if(!map.containsKey(key)) return cache.remove(key);
-//		Queue<SignUpdater> queue = map.get(key);
-//		SignUpdater updater = queue.poll();
-//		cache.put((Location)key, queue.peek());
-//		if(queue.isEmpty()) map.remove(key);
-//		return updater;
-//	}
-//	
-//	@Override
-//	public int size() {
-//		return map.size();
-//	}
-//	
-//	@Override
-//	public Collection<SignUpdater> values() {
-//		Collection<SignUpdater> values = new LinkedList<SignUpdater>();
-//		for(Location loc : map.keySet())
-//			values.addAll(map.get(loc));
-//		return values;
-//	}
-//}

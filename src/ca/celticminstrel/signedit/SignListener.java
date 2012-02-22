@@ -1,5 +1,6 @@
 package ca.celticminstrel.signedit;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -37,15 +38,15 @@ final class SignListener implements Listener {
 			//logger.info("Placing sign at " + loc);
 			String owner = null, dflt = Option.DEFAULT_OWNER.get();
 			if(dflt.equalsIgnoreCase("placer")) owner = setter.getName();
-			else if(dflt.equalsIgnoreCase("none")) owner = "#";
-			else if(dflt.equals("*")) owner = "*";
+			else if(dflt.equalsIgnoreCase("none")) owner = SignEdit.NO_OWNER;
+			else if(dflt.equals(SignEdit.PUBLIC)) owner = SignEdit.PUBLIC;
 			signEdit.setSignOwner(loc, owner);
 		}
 	}
 	
 	@EventHandler(priority=NORMAL)
 	public void onBlockBreak(BlockBreakEvent evt) {
-		Block block = evt.getBlock();
+		final Block block = evt.getBlock();
 		if(signEdit.updates.containsKey(block.getLocation())) {
 			//logger.info("Cancelled breaking of an updater sign.");
 			evt.setCancelled(true);
@@ -53,14 +54,18 @@ final class SignListener implements Listener {
 			if(Option.BREAK_PROTECT.get()) {
 				Player player = evt.getPlayer();
 				if(!signEdit.isOwnerOf(player, evt.getBlock().getLocation())) {
-					if(signEdit.getSignOwner(evt.getBlock()).equals("#") && Option.ORPHANED_BREAKABLE.get())
+					if(signEdit.getSignOwner(evt.getBlock()).equals(SignEdit.NO_OWNER) && Option.ORPHANED_BREAKABLE.get())
 						return; // Orphaned (ownerless) signs have been configured as being breakable by all
 					evt.setCancelled(true);
 					player.sendMessage("Sorry, you are not the owner of that sign.");
 					return;
 				}
 			}
-			signEdit.setSignOwner(block.getLocation(), "#");
+			Bukkit.getScheduler().scheduleSyncDelayedTask(signEdit, new Runnable() {
+				@Override public void run() {
+					signEdit.setSignOwner(block.getLocation(), SignEdit.NO_OWNER);
+				}
+			});
 		}
 	}
 

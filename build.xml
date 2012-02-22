@@ -6,8 +6,9 @@
   <property name="target" location="target"/>
   <property name="classes" location="${target}/classes"/>
   <property name="artifacts" location="${target}/artifacts"/>
-  
-  <property name="craftbukkit.jar"  value="craftbukkit.jar"/>
+	  
+  <property name="craftbukkit.jar"  value="craftbukkit.jar"/>  
+  <property name="LWC"  value="LWC.jar"/>
   
   <target name="init">
     <mkdir dir="${lib}"/>
@@ -24,6 +25,7 @@
     <javac srcdir="${src}" destdir="${classes}" includeantruntime="false" debug="on">
       <classpath>
         <pathelement location="${lib}/${craftbukkit.jar}"/>
+        <pathelement location="${lib}/${LWC}"/>
       </classpath>
     </javac>
   </target>

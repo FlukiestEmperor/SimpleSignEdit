@@ -13,6 +13,7 @@ public abstract class Option {
 	public static OptionString DB_CLASS = new OptionString("database.class","org.sqlite.JDBC");
 	public static OptionBoolean AUTO_SAVE = new OptionBoolean("auto-save",true);
 	public static OptionString DEFAULT_OWNER = new OptionString("default-owner", "placer");
+	public static OptionBoolean USE_LWC = new OptionBoolean("use-lwc", true);
 	protected String node;
 	protected Object def;
 	private static Configuration config;
@@ -44,34 +45,34 @@ public abstract class Option {
 }
 
 class OptionBoolean extends Option {
-		@SuppressWarnings("hiding") OptionBoolean(String node, boolean def) {
-			super(node, def);
-		}
-
-		@Override
-		public Boolean get() {
-		return setDefault().getBoolean(node, (Boolean) def);
-		}
+	@SuppressWarnings("hiding") OptionBoolean(String node, boolean def) {
+		super(node, def);
 	}
+
+	@Override
+	public Boolean get() {
+		return setDefault().getBoolean(node, (Boolean) def);
+	}
+}
 
 class OptionString extends Option {
-		@SuppressWarnings("hiding") OptionString(String node, String def) {
-			super(node, def);
-		}
-
-		@Override
-		public String get() {
-		return setDefault().getString(node, (String) def);
-		}
+	@SuppressWarnings("hiding") OptionString(String node, String def) {
+		super(node, def);
 	}
 
-class OptionInteger extends Option {
-		@SuppressWarnings("hiding") OptionInteger(String node, int def) {
-			super(node, def);
-		}
+	@Override
+	public String get() {
+		return setDefault().getString(node, (String) def);
+	}
+}
 
-		@Override
-		public Integer get() {
+class OptionInteger extends Option {
+	@SuppressWarnings("hiding") OptionInteger(String node, int def) {
+		super(node, def);
+	}
+
+	@Override
+	public Integer get() {
 		return setDefault().getInt(node, (Integer) def);
 	}
 }
