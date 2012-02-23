@@ -243,6 +243,7 @@ public class SignEdit extends JavaPlugin {
 			Plugin lwcPlugin = getServer().getPluginManager().getPlugin("LWC");
 			if(lwcPlugin != null) {
 			    lwc = ((LWCPlugin) lwcPlugin).getLWC();
+				logger.info("LWC support enabled!");
 			}
 		}
 		db = SignsMap.setup(logger, dbOptions);
