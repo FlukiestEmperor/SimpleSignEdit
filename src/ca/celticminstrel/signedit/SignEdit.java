@@ -169,7 +169,7 @@ public class SignEdit extends JavaPlugin {
 	boolean canStackSigns(Material clicked, BlockFace face) {
 		if(clicked != Material.SIGN_POST) return false;
 		if(face != BlockFace.UP) return false;
-		return Option.ALLOW_STACKING.get();
+		return Options.ALLOW_STACKING.get();
 	}
 
 	boolean canSetOwner(Player who) {
@@ -222,7 +222,7 @@ public class SignEdit extends JavaPlugin {
 			}
 			dbUpdater = null;
 		}
-		if(Option.AUTO_SAVE.get()) saveConfig();
+		if(Options.AUTO_SAVE.get()) saveConfig();
 		logger.info("Disabled " + getDescription().getFullName());
 	}
 
@@ -239,7 +239,7 @@ public class SignEdit extends JavaPlugin {
 			Set<String> keys = dboptSection.getKeys(false);
 			for(String key : keys) dbOptions.setProperty(key, config.getString("database.options." + key));
 		}
-		if(Option.USE_LWC.get()) {
+		if(Options.USE_LWC.get()) {
 			Plugin lwcPlugin = getServer().getPluginManager().getPlugin("LWC");
 			if(lwcPlugin != null) {
 			    lwc = ((LWCPlugin) lwcPlugin).getLWC();

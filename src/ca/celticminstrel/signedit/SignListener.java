@@ -36,7 +36,7 @@ final class SignListener implements Listener {
 			evt.setCancelled(true);
 		} else if(!signEdit.isSignOwned(loc)) {
 			//logger.info("Placing sign at " + loc);
-			String owner = null, dflt = Option.DEFAULT_OWNER.get();
+			String owner = null, dflt = Options.DEFAULT_OWNER.get();
 			if(dflt.equalsIgnoreCase("placer")) owner = setter.getName();
 			else if(dflt.equalsIgnoreCase("none")) owner = SignEdit.NO_OWNER;
 			else if(dflt.equals(SignEdit.PUBLIC)) owner = SignEdit.PUBLIC;
@@ -51,10 +51,10 @@ final class SignListener implements Listener {
 			//logger.info("Cancelled breaking of an updater sign.");
 			evt.setCancelled(true);
 		} else if(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
-			if(Option.BREAK_PROTECT.get()) {
+			if(Options.BREAK_PROTECT.get()) {
 				Player player = evt.getPlayer();
 				if(!signEdit.isOwnerOf(player, evt.getBlock().getLocation())) {
-					if(signEdit.getSignOwner(evt.getBlock()).equals(SignEdit.NO_OWNER) && Option.ORPHANED_BREAKABLE.get())
+					if(signEdit.getSignOwner(evt.getBlock()).equals(SignEdit.NO_OWNER) && Options.ORPHANED_BREAKABLE.get())
 						return; // Orphaned (ownerless) signs have been configured as being breakable by all
 					evt.setCancelled(true);
 					player.sendMessage("Sorry, you are not the owner of that sign.");
@@ -73,7 +73,7 @@ final class SignListener implements Listener {
 	public void onPlayerInteract(PlayerInteractEvent evt) {
 		if(evt.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 		Player player = evt.getPlayer();
-		String sneak = Option.SNEAKING.get();
+		String sneak = Options.SNEAKING.get();
 		Boolean needsSneak = null;
 		if(sneak.equalsIgnoreCase("true")) needsSneak = true;
 		else if(sneak.equalsIgnoreCase("false")) needsSneak = false;
@@ -102,10 +102,10 @@ final class SignListener implements Listener {
 					signEdit.updates.put(source.getLocation(), new SignUpdater(signEdit, target, source, player));
 				}
 			}
-		} else if(holding == Material.getMaterial(Option.VIEW_OWNER.get())) {
+		} else if(holding == Material.getMaterial(Options.VIEW_OWNER.get())) {
 			if(clicked != Material.WALL_SIGN && clicked != Material.SIGN_POST) return;
 			player.sendMessage("That sign is owned by " + signEdit.getOwnerOf(target));
-		} else if(holding == Material.getMaterial(Option.SET_OWNER.get())) {
+		} else if(holding == Material.getMaterial(Options.SET_OWNER.get())) {
 			if(clicked != Material.WALL_SIGN && clicked != Material.SIGN_POST) return;
 			if(signEdit.ownerSetting.containsKey(player.getName())) {
 				Location loc = signEdit.ownerSetting.get(player.getName());

@@ -28,10 +28,10 @@ class SignsMap implements Map<Location, String>, Runnable {
 	
 	public static Connection setup(Logger logger, Properties dbOptions) {
 		Connection db;
-		String dbUrl = Option.DATABASE.get();
+		String dbUrl = Options.DATABASE.get();
 		if(!dbUrl.equalsIgnoreCase("yaml")) {
 			try {
-				Class.forName(Option.DB_CLASS.get());
+				Class.forName(Options.DB_CLASS.get());
 				db = DriverManager.getConnection(dbUrl, dbOptions);
 				logger.info("Checking for table...");
 				ResultSet tables = db.getMetaData().getTables(db.getCatalog(), null, "sign_ownership", null);
@@ -84,7 +84,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 				e.printStackTrace();
 			} catch(ClassNotFoundException e) {
 				db = null;
-				logger.info("Could not load class '" + Option.DB_CLASS.get() + "' for the database!");
+				logger.info("Could not load class '" + Options.DB_CLASS.get() + "' for the database!");
 				e.printStackTrace();
 			}
 		} else db = null;
