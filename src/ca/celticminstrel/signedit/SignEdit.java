@@ -233,6 +233,7 @@ public class SignEdit extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(ownerL, this);
 		FileConfiguration config = getConfig();
 		Option.setConfiguration(config);
+		saveConfig();
 		Properties dbOptions = new Properties();
 		ConfigurationSection dboptSection = config.getConfigurationSection("database.options");
 		if(dboptSection != null) {
