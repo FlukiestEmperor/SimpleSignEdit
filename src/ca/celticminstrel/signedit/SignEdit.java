@@ -32,7 +32,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.ChatColor;
 
-public class SignEdit extends JavaPlugin {
+public class SignEdit extends JavaPlugin implements SignEditAPI {
 	public static final String ME = "@";
 	public static final String PUBLIC = "*";
 	public static final String NO_OWNER = "#";
@@ -47,15 +47,9 @@ public class SignEdit extends JavaPlugin {
 	Connection db;
 	private Thread dbUpdater;
 	
-	/**
-	 * Public API function to set the owner of a sign. It's recommended that plugins which handle
-	 * right-clicks on signs set the owner of their signs to no-one.
-	 * @param whichSign The location of the sign whose ownership you are changing.
-	 * @param owner The name of the new owner. Use "#" for no-one and "*" for everyone. Null is also no-one.
-	 * @return Whether a sign's owner was actually changed. Will return false if there is no sign at the location
-	 * or if the sign already has the requested owner.
-	 */
+	@Override
 	public boolean setSignOwner(Location whichSign, String owner) {
+		if(db == null && lwc == null) return false;
 		Material sign = whichSign.getWorld().getBlockAt(whichSign).getType();
 		if(sign != Material.SIGN_POST && sign != Material.WALL_SIGN) {
 			ownership.remove(whichSign);
@@ -68,61 +62,42 @@ public class SignEdit extends JavaPlugin {
 			else lwcSetOwner(whichSign, owner);
 		}
 		if(owner == null) owner = NO_OWNER;
-		if(owner.equals(NO_OWNER)) ownership.remove(whichSign);
-		else ownership.put(whichSign, owner);
+		if(db != null) {
+			if(owner.equals(NO_OWNER)) ownership.remove(whichSign);
+			else ownership.put(whichSign, owner);
+		}
 		if(owner.equalsIgnoreCase(oldOwner)) return false;
 		return true;
 	}
-
-	/**
-	 * Public API function to set the owner of a sign. It's recommended that plugins which handle
-	 * right-clicks on signs set the owner of their signs to no-one.
-	 * @param whichSign The sign whose ownership you are changing.
-	 * @param owner The name of the new owner. Use "#" for no-one and "*" for everyone. Null is also no-one.
-	 * @return Whether a sign's owner was actually changed. Will return false if there is no sign at the location
-	 * or if the sign already has the requested owner.
-	 */
+	
+	@Override
 	public boolean setSignOwner(Block whichSign, String owner) {
 		return setSignOwner(whichSign.getLocation(), owner);
 	}
 	
-	/**
-	 * Public API function to get the owner of a sign.
-	 * @param whichSign The location of the sign whose ownership you are checking.
-	 * @return The sign's current owner; "#" means no-one, "*" means everyone.
-	 */
+	@Override
 	public String getSignOwner(Location whichSign) {
+		if(db == null && lwc == null) return PUBLIC;
 		String owner = null;
 		if(lwc != null) owner = lwcGetOwner(whichSign);
 		if(owner != null) return owner;
+		if(db == null) return PUBLIC;
 		if(ownership.containsKey(whichSign))
 			return ownership.get(whichSign);
 		else return NO_OWNER;
 	}
-
-	/**
-	 * Public API function to get the owner of a sign.
-	 * @param whichSign The sign whose ownership you are checking.
-	 * @return The sign's current owner; "#" means no-one, "*" means everyone.
-	 */
+	
+	@Override
 	public String getSignOwner(Block whichSign) {
 		return getSignOwner(whichSign.getLocation());
 	}
 	
-	/**
-	 * Convenience method to check if a sign has an owner
-	 * @param whichSign The location of the sign whose owned status you are checking.
-	 * @return True if the sign is owned by someone (or everyone), false if it is owned by no-one.
-	 */
+	@Override
 	public boolean isSignOwned(Location whichSign) {
 		return !getSignOwner(whichSign).equals(NO_OWNER);
 	}
 	
-	/**
-	 * Convenience method to check if a sign has an owner
-	 * @param whichSign The sign whose owned status you are checking.
-	 * @return True if the sign is owned by someone (or everyone), false if it is owned by no-one.
-	 */
+	@Override
 	public boolean isSignOwned(Block whichSign) {
 		return !getSignOwner(whichSign).equals(NO_OWNER);
 	}
