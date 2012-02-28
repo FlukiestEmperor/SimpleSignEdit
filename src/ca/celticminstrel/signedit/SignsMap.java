@@ -29,7 +29,8 @@ class SignsMap implements Map<Location, String>, Runnable {
 	public static Connection setup(Logger logger, Properties dbOptions) {
 		Connection db;
 		String dbUrl = Options.DATABASE.get();
-		if(!dbUrl.equalsIgnoreCase("yaml")) {
+		// TODO: Remove check for "yaml"
+		if(!dbUrl.equalsIgnoreCase("yaml") && !dbUrl.equalsIgnoreCase("none")) {
 			try {
 				Class.forName(Options.DB_CLASS.get());
 				db = DriverManager.getConnection(dbUrl, dbOptions);
