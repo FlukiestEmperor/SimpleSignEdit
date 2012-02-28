@@ -18,6 +18,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
+import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.ConfigurationSection;
 
 class SignsMap implements Map<Location, String>, Runnable {
 	private Map<Location, String> map = new HashMap<Location, String>();
@@ -26,11 +28,17 @@ class SignsMap implements Map<Location, String>, Runnable {
 	public volatile boolean done = false;
 	private PreparedStatement select, countByKey, countByValue;
 	
-	public static Connection setup(Logger logger, Properties dbOptions) {
+	public static Connection setup(Logger logger, Configuration config) {
 		Connection db;
 		String dbUrl = Options.DATABASE.get();
 		// TODO: Remove check for "yaml"
 		if(!dbUrl.equalsIgnoreCase("yaml") && !dbUrl.equalsIgnoreCase("none")) {
+			Properties dbOptions = new Properties();
+			ConfigurationSection dboptSection = config.getConfigurationSection("database.options");
+			if(dboptSection != null) {
+				Set<String> keys = dboptSection.getKeys(false);
+				for(String key : keys) dbOptions.setProperty(key, config.getString("database.options." + key));
+			}
 			try {
 				Class.forName(Options.DB_CLASS.get());
 				db = DriverManager.getConnection(dbUrl, dbOptions);

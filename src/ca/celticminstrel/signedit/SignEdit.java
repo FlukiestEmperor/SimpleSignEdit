@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -234,12 +233,6 @@ public class SignEdit extends JavaPlugin {
 		FileConfiguration config = getConfig();
 		Option.setConfiguration(config);
 		saveConfig();
-		Properties dbOptions = new Properties();
-		ConfigurationSection dboptSection = config.getConfigurationSection("database.options");
-		if(dboptSection != null) {
-			Set<String> keys = dboptSection.getKeys(false);
-			for(String key : keys) dbOptions.setProperty(key, config.getString("database.options." + key));
-		}
 		if(Options.USE_LWC.get()) {
 			Plugin lwcPlugin = getServer().getPluginManager().getPlugin("LWC");
 			if(lwcPlugin != null) {
@@ -247,7 +240,7 @@ public class SignEdit extends JavaPlugin {
 				logger.info("LWC support enabled!");
 			}
 		}
-		db = SignsMap.setup(logger, dbOptions);
+		db = SignsMap.setup(logger, config);
 		ownership = new SignsMap(this);
 		if(db != null) {
 			dbUpdater = new Thread(ownership);
