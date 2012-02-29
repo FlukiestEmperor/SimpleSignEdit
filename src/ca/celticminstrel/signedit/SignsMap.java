@@ -180,6 +180,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 						plugin.logger.severe("An SQL error has occurred:");
 						plugin.logger.severe("--> " + e.getMessage());
 						plugin.logger.warning("This may indicate a loss of sign ownership data!");
+						initStatements(); // In case the issue can be resolved by recreating the statements
 					}
 				}
 				synchronized(queue) {
