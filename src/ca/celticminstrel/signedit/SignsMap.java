@@ -23,16 +23,17 @@ import org.bukkit.configuration.ConfigurationSection;
 
 class SignsMap implements Map<Location, String>, Runnable {
 	private Map<Location, String> map = new HashMap<Location, String>();
-	Queue<Entry<Location, String>> queue = new ArrayDeque<Entry<Location, String>>();
+	private Queue<Entry<Location, String>> queue = new ArrayDeque<Entry<Location, String>>();
 	private SignEdit plugin;
-	public volatile boolean done = false;
-	private PreparedStatement select, countByKey, countByValue;
+	private Connection db;
+	private Thread dbUpdater;
+	private volatile boolean done = false;
+	private PreparedStatement select, countByKey, countByValue, delete, insert;
 	
-	public static Connection setup(Logger logger, Configuration config) {
+	public static SignsMap setup(Logger logger, Configuration config, SignEdit instance) {
 		Connection db;
 		String dbUrl = Options.DATABASE.get();
-		// TODO: Remove check for "yaml"
-		if(!dbUrl.equalsIgnoreCase("yaml") && !dbUrl.equalsIgnoreCase("none")) {
+		if(!dbUrl.equalsIgnoreCase("none")) {
 			Properties dbOptions = new Properties();
 			ConfigurationSection dboptSection = config.getConfigurationSection("database.options");
 			if(dboptSection != null) {
@@ -97,58 +98,52 @@ class SignsMap implements Map<Location, String>, Runnable {
 				e.printStackTrace();
 			}
 		} else db = null;
-		return db;
+		return db == null ? null : new SignsMap(instance, db);
 	}
 
-	public SignsMap(SignEdit signEdit) {
+	public SignsMap(SignEdit signEdit, Connection conn) {
+		db = conn;
 		plugin = signEdit;
-		if(plugin.db == null) return;
+		initStatements();
+		dbUpdater = new Thread(this);
+		dbUpdater.start();
+	}
+
+	private void initStatements() {
 		try {
-			select = plugin.db.prepareStatement(
+			select = db.prepareStatement(
 				"select owner from sign_ownership " +
 				"where world = ? and x = ? and y = ? and z = ?"
 			);
-			countByKey = plugin.db.prepareStatement(
+			countByKey = db.prepareStatement(
 				"select count(*) from sign_ownership " +
 				"where world = ? and x = ? and y = ? and z = ?"
 			);
-			countByValue = plugin.db.prepareStatement(
+			countByValue = db.prepareStatement(
 				"select count(*) from sign_ownership " +
 				"where owner = ?"
 			);
+			delete = db.prepareStatement(
+				"delete from sign_ownership " +
+				"where world = ? and x = ? and y = ? and z = ?"
+			);
+			insert = db.prepareStatement(
+				"insert into sign_ownership(world, x, y, z, owner) " +
+				"values (?, ?, ?, ?, ?)"
+			);
 		} catch(SQLException e) {
 			try {
-				plugin.db.close();
+				db.close();
 			} catch(SQLException x) {
 				x.printStackTrace();
 			}
-			plugin.db = null;
+			db = null;
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void run() {
-		PreparedStatement delete, insert;
-		try {
-			delete = plugin.db.prepareStatement(
-				"delete from sign_ownership " +
-				"where world = ? and x = ? and y = ? and z = ?"
-			);
-			insert = plugin.db.prepareStatement(
-				"insert into sign_ownership(world, x, y, z, owner) " +
-				"values (?, ?, ?, ?, ?)"
-			);
-		} catch(SQLException e) {
-			try {
-				plugin.db.close();
-			} catch(SQLException x) {
-				x.printStackTrace();
-			}
-			plugin.db = null;
-			e.printStackTrace();
-			return;
-		}
 		try {
 			while(!done) {
 				while(!queue.isEmpty()) {
@@ -205,7 +200,7 @@ class SignsMap implements Map<Location, String>, Runnable {
 	@Override
 	public void clear() {
 		try {
-			plugin.db.createStatement().execute("delete from sign_ownership");
+			db.createStatement().execute("delete from sign_ownership");
 		} catch(SQLException e) {
 			e.printStackTrace();
 		}
@@ -321,6 +316,25 @@ class SignsMap implements Map<Location, String>, Runnable {
 	@Override
 	public Collection<String> values() {
 		return map.values();
+	}
+
+	public void close() {
+		try {
+			db.close();
+		} catch(SQLException e) {
+			e.printStackTrace();
+		}
+		db = null;
+		done = true;
+		try {
+			synchronized(queue) {
+				queue.notify();
+			}
+			dbUpdater.join();
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+		dbUpdater = null;
 	}
 	
 	private class QueueEntry implements Entry<Location,String> {

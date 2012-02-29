@@ -1,13 +1,8 @@
 package ca.celticminstrel.signedit;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.lwc.LWCPlugin;
@@ -20,7 +15,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -36,7 +30,6 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 	public static final String ME = "@";
 	public static final String PUBLIC = "*";
 	public static final String NO_OWNER = "#";
-	private static Pattern locpat = Pattern.compile("([^(]+)\\((-?\\d+),(-?\\d+),(-?\\d+)\\)");
 	Logger logger;
 	private Listener signL = new SignListener(this);
 	private Listener ownerL = new OwnerListener(this);
@@ -44,12 +37,10 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 	HashMap<Location,SignUpdater> updates = new HashMap<Location,SignUpdater>();
 	private SignsMap ownership;
 	HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
-	Connection db;
-	private Thread dbUpdater;
 	
 	@Override
 	public boolean setSignOwner(Location whichSign, String owner) {
-		if(db == null && lwc == null) return false;
+		if(ownership == null && lwc == null) return false;
 		Material sign = whichSign.getWorld().getBlockAt(whichSign).getType();
 		if(sign != Material.SIGN_POST && sign != Material.WALL_SIGN) {
 			ownership.remove(whichSign);
@@ -62,7 +53,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 			else lwcSetOwner(whichSign, owner);
 		}
 		if(owner == null) owner = NO_OWNER;
-		if(db != null) {
+		if(ownership != null) {
 			if(owner.equals(NO_OWNER)) ownership.remove(whichSign);
 			else ownership.put(whichSign, owner);
 		}
@@ -77,11 +68,11 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 	
 	@Override
 	public String getSignOwner(Location whichSign) {
-		if(db == null && lwc == null) return PUBLIC;
+		if(ownership == null && lwc == null) return PUBLIC;
 		String owner = null;
 		if(lwc != null) owner = lwcGetOwner(whichSign);
 		if(owner != null) return owner;
-		if(db == null) return PUBLIC;
+		if(ownership == null) return PUBLIC;
 		if(ownership.containsKey(whichSign))
 			return ownership.get(whichSign);
 		else return NO_OWNER;
@@ -166,36 +157,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 
 	@Override
 	public void onDisable() {
-		if(db == null) {
-			logger.info("Saving ownership to config.yml...");
-			FileConfiguration config = getConfig();
-			config.set("signs", null); // TODO: Is this really removal?
-			for(Location loc : ownership.keySet()) {
-				if(loc == null) continue;
-				Formatter fmt = new Formatter();
-				String locString = fmt.format("%s(%d,%d,%d)", loc.getWorld().getName(),
-						loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).toString();
-				config.set("signs." + locString, ownership.get(loc));
-			}
-			saveConfig();
-		} else {
-			try {
-				db.close();
-			} catch(SQLException e) {
-				e.printStackTrace();
-			}
-			db = null;
-			ownership.done = true;
-			try {
-				synchronized(ownership.queue) {
-					ownership.queue.notify();
-				}
-				dbUpdater.join();
-			} catch(InterruptedException e) {
-				e.printStackTrace();
-			}
-			dbUpdater = null;
-		}
+		ownership.close();
 		if(Options.AUTO_SAVE.get()) saveConfig();
 		logger.info("Disabled " + getDescription().getFullName());
 	}
@@ -215,34 +177,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 				logger.info("LWC support enabled!");
 			}
 		}
-		db = SignsMap.setup(logger, config);
-		ownership = new SignsMap(this);
-		if(db != null) {
-			dbUpdater = new Thread(ownership);
-			dbUpdater.start();
-		}
-		// Compatibility with past versions
-		ConfigurationSection signs = config.getConfigurationSection("signs");
-		Set<String> keys = signs == null ? null : signs.getKeys(false);
-		if(keys != null && !keys.isEmpty()) {
-			if(db != null)
-				logger.info("Converting your old sign ownerships from the config format to the database format...");
-			for(String loc : keys) {
-				Matcher m = locpat.matcher(loc);
-				if(!m.matches()) {
-					logger.warning("Invalid key in config: " + loc);
-					continue;
-				}
-				String world = m.group(1);
-				String x = m.group(2), y = m.group(3), z = m.group(4);
-				Location key = new Location(getServer().getWorld(world), Double.valueOf(x), Double.valueOf(y), Double.valueOf(z));
-				ownership.put(key, config.getString("signs." + loc));
-			}
-			if(db != null) {
-				config.set("signs",null); // TODO: Is this a true removal?
-				saveConfig();
-			}
-		}
+		ownership = SignsMap.setup(logger, config, this);
 		
 		HashMap<String,Boolean> colours = new HashMap<String,Boolean>();
 		PluginManager pm = getServer().getPluginManager();
