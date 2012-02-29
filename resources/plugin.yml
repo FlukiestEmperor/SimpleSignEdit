@@ -2,7 +2,7 @@ name: SimpleSignEdit
 main: ca.celticminstrel.signedit.SignEdit
 authors:
   - Celtic Minstrel
-version: 1.8.2
+version: 2.0
 softdepend: [LWC]
 permissions:
   simplesignedit.edit:
