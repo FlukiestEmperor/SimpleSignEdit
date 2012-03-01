@@ -14,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -217,9 +218,9 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 		logger.info(pdfFile.getFullName() + " enabled.");
 	}
 	
-	void sendSignUpdate(Block signBlock) {
+	void sendSignUpdate(BlockState signBlock) {
 		// This line updates the sign for the user.
-		final Sign sign = (Sign) signBlock.getState();
+		final Sign sign = (Sign) signBlock;
 		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			@Override
 			public void run() {

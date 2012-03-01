@@ -37,7 +37,7 @@ final class SignUpdater implements Runnable {
 		Sign targetState = (Sign) target.getState();
 		for(int i = 0; i < 4; i++) targetState.setLine(i, lines[i]);
 		source.setType(Material.AIR);
-		signEdit.sendSignUpdate(target);
+		signEdit.sendSignUpdate(targetState);
 		if(setter.getGameMode() != GameMode.CREATIVE) {
 			ItemStack itemInHand = setter.getItemInHand();
 			if(itemInHand == null || itemInHand.getType() == Material.AIR)

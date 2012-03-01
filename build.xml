@@ -37,7 +37,7 @@
 		</javadoc>
 	</target>
 	
-	<target name="build" depends="doc,compile">
+	<target name="build" depends="compile">
 		<mkdir dir="${artifacts}"/>
 		<jar jarfile="${artifacts}/SimpleSignEdit.jar" update="true">
 			<fileset dir="${classes}/"/>
@@ -48,7 +48,7 @@
 		</jar>
 	</target>
 	
-	<target name="dist" depends="clean,build"></target>
+	<target name="dist" depends="clean,doc,build"></target>
 	
 	<target name="clean">
 		<delete dir="${target}"/>
