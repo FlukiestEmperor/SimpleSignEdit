@@ -53,7 +53,7 @@ final class SignListener implements Listener {
 		} else if(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST) {
 			if(Options.BREAK_PROTECT.get()) {
 				Player player = evt.getPlayer();
-				if(!signEdit.isOwnerOf(player, evt.getBlock().getLocation())) {
+				if(!signEdit.canEditSign(player, evt.getBlock().getLocation())) {
 					if(signEdit.getSignOwner(evt.getBlock()).equals(SignEdit.NO_OWNER) && Options.ORPHANED_BREAKABLE.get())
 						return; // Orphaned (ownerless) signs have been configured as being breakable by all
 					evt.setCancelled(true);
@@ -92,9 +92,9 @@ final class SignListener implements Listener {
 					player.sendMessage("Sorry, you do not have permission to edit signs.");
 					return;
 				}
-				if(!signEdit.isOwnerOf(player, target.getLocation())) {
+				if(!signEdit.canEditSign(player, target.getLocation())) {
 					evt.setCancelled(true);
-					player.sendMessage("Sorry, you are not the owner of that sign.");
+					player.sendMessage("Sorry, you are not allowed to edit that sign.");
 					return;
 				}
 				if(source.getType() == Material.AIR) {

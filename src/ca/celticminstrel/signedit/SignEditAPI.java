@@ -2,7 +2,17 @@ package ca.celticminstrel.signedit;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 
+/**
+ * This class encapsulates the public API for SimpleSignEdit. To make use of it, use the following
+ * pattern:
+ * <pre>{@code
+ *SignEditAPI signs = null;
+ *Plugin signEdit = Bukkit.getPluginManager().getPlugin("SimpleSignEdit");
+ *if(signEdit != null) signs = (SignEditAPI)signEdit;
+ * }</pre>
+ */
 public interface SignEditAPI {
 	/**
 	 * Public API function to set the owner of a sign. It's recommended that plugins which handle
@@ -48,4 +58,6 @@ public interface SignEditAPI {
 	 * @return True if the sign is owned by someone (or everyone), false if it is owned by no-one.
 	 */
 	boolean isSignOwned(Block whichSign);
+	boolean canEditSign(Player who, Location whichSign);
+	boolean canEditSign(Player who, Block whichSign);
 }

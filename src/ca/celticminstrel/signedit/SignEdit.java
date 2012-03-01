@@ -92,6 +92,22 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 	public boolean isSignOwned(Block whichSign) {
 		return !getSignOwner(whichSign).equals(NO_OWNER);
 	}
+	
+	@Override
+	public boolean canEditSign(Player who, Location whichSign) {
+		if(lwc != null) return lwc.canAccessProtection(who, whichSign.getBlock());
+		String owner = getSignOwner(whichSign);
+		boolean canEditAll = who.hasPermission("simplesignedit.edit.all");
+		if(owner == null) return canEditAll;
+		if(owner.equalsIgnoreCase(who.getName())) return true;
+		if(owner.equals(PUBLIC)) return true;
+		return canEditAll;
+	}
+	
+	@Override
+	public boolean canEditSign(Player who, Block whichSign) {
+		return canEditSign(who, whichSign.getLocation());
+	}
 
 	private void lwcSetPublic(Location whichSign) {
 		Protection prot = lwc.findProtection(whichSign.getBlock());
@@ -139,15 +155,6 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 
 	boolean canSetOwner(Player who) {
 		return who.hasPermission("simplesignedit.setowner");
-	}
-	
-	boolean isOwnerOf(Player player, Location location) {
-		String owner = getSignOwner(location);
-		boolean canEditAll = player.hasPermission("simplesignedit.edit.all");
-		if(owner == null) return canEditAll;
-		if(owner.equalsIgnoreCase(player.getName())) return true;
-		if(owner.equals(PUBLIC)) return true;
-		return canEditAll;
 	}
 	
 	private boolean hasColour(Player who, ChatColor clr) {

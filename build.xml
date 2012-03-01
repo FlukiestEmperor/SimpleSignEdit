@@ -5,6 +5,7 @@
 	<property name="target" location="target"/>
 	<property name="classes" location="${target}/classes"/>
 	<property name="artifacts" location="${target}/artifacts"/>
+	<property name="javadoc" location="api"/>
 	
 	<property name="bukkit" value="bukkit.jar"/>
 	<property name="LWC" value="LWC.jar"/>
@@ -15,13 +16,13 @@
 		<mkdir dir="${classes}"/>
 	</target>
 	
-	<target name="get_latest_libs" depends="init">
+	<target name="update" depends="init">
 	    <get src="http://dl.bukkit.org/downloads/bukkit/get/latest-rb/bukkit.jar"
 	    	dest="${lib}/${bukkit}" usetimestamp="true"/>
 		<get src="http://cfapi.lukegb.com/dl/lwc/" dest="${lib}/${LWC}" usetimestamp="true"/>
 	</target>
 	
-	<target name="compile" depends="get_latest_libs">
+	<target name="compile" depends="init">
 		<javac srcdir="${src}" destdir="${classes}" includeantruntime="false" debug="on">
 			<classpath>
 				<pathelement location="${lib}/${bukkit}"/>
@@ -30,16 +31,27 @@
 		</javac>
 	</target>
 	
-	<target name="dist" depends="compile">
+	<target name="doc">
+		<javadoc sourcefiles="${src}/ca/celticminstrel/signedit/SignEditAPI.java" destdir="${javadoc}">
+			<classpath path="${lib}/${bukkit}"/>
+		</javadoc>
+	</target>
+	
+	<target name="build" depends="doc,compile">
 		<mkdir dir="${artifacts}"/>
 		<jar jarfile="${artifacts}/SimpleSignEdit.jar" update="true">
 			<fileset dir="${classes}/"/>
 			<fileset dir="${resources}/"/>
+			<fileset dir="${src}">
+				<include name="**/SignEditAPI.java"/>
+			</fileset>
 		</jar>
 	</target>
 	
+	<target name="dist" depends="clean,build"></target>
+	
 	<target name="clean">
 		<delete dir="${target}"/>
+		<delete dir="${javadoc}"/>
 	</target>
-	
 </project>
