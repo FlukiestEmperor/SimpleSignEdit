@@ -1,4 +1,4 @@
-<project name="SignEdit" default="dist" basedir=".">
+<project name="SignEdit" default="build" basedir=".">
 	<property name="src" location="src"/>
 	<property name="resources" location="resources"/>
 	<property name="lib" location="../lib"/>
