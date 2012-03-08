@@ -15,6 +15,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -30,9 +34,9 @@ class SignsMap implements Map<Location, String>, Runnable {
 	private volatile boolean done = false;
 	private PreparedStatement select, countByKey, countByValue, delete, insert;
 	
-	public static SignsMap setup(Logger logger, Configuration config, SignEdit instance) {
-		Connection db;
+	public static Future<SignsMap> setup(Logger logger, Configuration config, SignEdit instance) {
 		String dbUrl = Options.DATABASE.get();
+		final DatabaseFuture db = new DatabaseFuture();
 		if(!dbUrl.equalsIgnoreCase("none")) {
 			Properties dbOptions = new Properties();
 			ConfigurationSection dboptSection = config.getConfigurationSection("database.options");
@@ -40,8 +44,72 @@ class SignsMap implements Map<Location, String>, Runnable {
 				Set<String> keys = dboptSection.getKeys(false);
 				for(String key : keys) dbOptions.setProperty(key, config.getString("database.options." + key));
 			}
+			db.start(new DatabaseLoader(db, logger, dbUrl, dbOptions, instance));
+		}
+		return db;
+	}
+	
+	private static class DatabaseFuture implements Future<SignsMap> {
+		SignsMap map = null;
+		Thread thread = null;
+		@Override
+		public boolean cancel(boolean mayInterruptIfRunning) {
+			return false;
+		}
+
+		@Override
+		public SignsMap get() throws InterruptedException, ExecutionException {
+			thread.join();
+			return map;
+		}
+
+		@Override
+		public SignsMap get(long time, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+			unit.timedJoin(thread, time);
+			return map;
+		}
+
+		@Override
+		public boolean isCancelled() {
+			return false;
+		}
+
+		@Override
+		public boolean isDone() {
+			return !thread.isAlive();
+		}
+		
+		public void set(SignsMap to) {
+			map = to;
+		}
+		
+		public void start(DatabaseLoader loader) {
+			thread = new Thread(loader);
+			thread.setPriority(Thread.MAX_PRIORITY);
+			thread.start();
+		}
+	}
+	
+	private static class DatabaseLoader implements Runnable {
+		private DatabaseFuture ret;
+		private Logger logger;
+		private String dbUrl;
+		private Properties dbOptions;
+		private SignEdit instance;
+		public DatabaseLoader(DatabaseFuture dbf, Logger log, String url, Properties options, SignEdit plugin) {
+			ret = dbf;
+			logger = log;
+			dbUrl = url;
+			dbOptions = options;
+			instance = plugin;
+		}
+		@Override
+		public void run() {
+			Connection db;
+			String dbclass = Options.DB_CLASS.get();
 			try {
-				Class.forName(Options.DB_CLASS.get());
+				Class.forName(dbclass);
+				logger.info("Loading database driver (" + dbclass + ")");
 				db = DriverManager.getConnection(dbUrl, dbOptions);
 				logger.info("Checking for table...");
 				ResultSet tables = db.getMetaData().getTables(db.getCatalog(), null, "sign_ownership", null);
@@ -94,17 +162,19 @@ class SignsMap implements Map<Location, String>, Runnable {
 				e.printStackTrace();
 			} catch(ClassNotFoundException e) {
 				db = null;
-				logger.info("Could not load class '" + Options.DB_CLASS.get() + "' for the database!");
+				logger.info("Could not load class '" + dbclass + "' for the database!");
 				e.printStackTrace();
 			}
-		} else db = null;
-		return db == null ? null : new SignsMap(instance, db);
+			if(db != null) ret.set(new SignsMap(instance, db));
+		}
 	}
 
 	public SignsMap(SignEdit signEdit, Connection conn) {
 		db = conn;
 		plugin = signEdit;
+		plugin.logger.info("Finishing database setup...");
 		initStatements();
+		plugin.logger.info("Starting database listener thread...");
 		dbUpdater = new Thread(this);
 		dbUpdater.start();
 	}

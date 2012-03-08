@@ -2,6 +2,8 @@ package ca.celticminstrel.signedit;
 
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import com.griefcraft.lwc.LWC;
@@ -9,6 +11,7 @@ import com.griefcraft.lwc.LWCPlugin;
 import com.griefcraft.model.Protection;
 import com.griefcraft.model.Protection.Type;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -37,6 +40,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 	private LWC lwc;
 	HashMap<Location,SignUpdater> updates = new HashMap<Location,SignUpdater>();
 	private SignsMap ownership;
+	Future<SignsMap> signsmapPending;
 	HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
 	
 	@Override
@@ -185,7 +189,8 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 				logger.info("LWC support enabled!");
 			}
 		}
-		ownership = SignsMap.setup(logger, config, this);
+		logger.info("Setting up database connection...");
+		signsmapPending = SignsMap.setup(logger, config, this);
 		
 		HashMap<String,Boolean> colours = new HashMap<String,Boolean>();
 		PluginManager pm = getServer().getPluginManager();
@@ -216,6 +221,23 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 		pm.addPermission(perm);
 		PluginDescriptionFile pdfFile = this.getDescription();
 		logger.info(pdfFile.getFullName() + " enabled.");
+		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			@Override public void run() {
+				if(signsmapPending != null && signsmapPending.isDone()) {
+					try {
+						ownership = signsmapPending.get();
+					} catch(InterruptedException e) {
+						e.printStackTrace();
+					} catch(ExecutionException e) {
+						e.printStackTrace();
+					}
+					logger.info("Database connection set up!");
+				} else {
+					Bukkit.getScheduler().scheduleSyncDelayedTask(SignEdit.this, this, 5);
+					logger.info("Waiting for database connection...");
+				}
+			}
+		}, 10);
 	}
 	
 	void sendSignUpdate(BlockState signBlock) {
