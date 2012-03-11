@@ -234,6 +234,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 		PluginDescriptionFile pdfFile = this.getDescription();
 		logger.info(pdfFile.getFullName() + " enabled.");
 		signsmapPendingTask = Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+			private int delay = 5;
 			@Override public void run() {
 				if(signsmapPending != null && signsmapPending.isDone()) {
 					try {
@@ -245,7 +246,8 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 					}
 					logger.info("Database connection set up!");
 				} else {
-					signsmapPendingTask = Bukkit.getScheduler().scheduleSyncDelayedTask(SignEdit.this, this, 5);
+					signsmapPendingTask = Bukkit.getScheduler().scheduleSyncDelayedTask(SignEdit.this, this, delay);
+					delay *= 2;
 					logger.info("Waiting for database connection...");
 				}
 			}
