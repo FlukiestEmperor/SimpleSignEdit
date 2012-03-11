@@ -41,6 +41,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 	HashMap<Location,SignUpdater> updates = new HashMap<Location,SignUpdater>();
 	private SignsMap ownership;
 	Future<SignsMap> signsmapPending;
+	int signsmapPendingTask;
 	HashMap<String,Location> ownerSetting = new HashMap<String,Location>();
 	
 	@Override
@@ -169,7 +170,18 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 
 	@Override
 	public void onDisable() {
-		ownership.close();
+		if(ownership == null && !signsmapPending.isCancelled()) {
+			// If server is shut down before the database connection is established
+			Bukkit.getScheduler().cancelTask(signsmapPendingTask);
+			try {
+				ownership = signsmapPending.get();
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+			} catch(ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		if(ownership != null) ownership.close();
 		if(Options.AUTO_SAVE.get()) saveConfig();
 		logger.info("Disabled " + getDescription().getFullName());
 	}
@@ -221,7 +233,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 		pm.addPermission(perm);
 		PluginDescriptionFile pdfFile = this.getDescription();
 		logger.info(pdfFile.getFullName() + " enabled.");
-		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+		signsmapPendingTask = Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			@Override public void run() {
 				if(signsmapPending != null && signsmapPending.isDone()) {
 					try {
@@ -233,7 +245,7 @@ public class SignEdit extends JavaPlugin implements SignEditAPI {
 					}
 					logger.info("Database connection set up!");
 				} else {
-					Bukkit.getScheduler().scheduleSyncDelayedTask(SignEdit.this, this, 5);
+					signsmapPendingTask = Bukkit.getScheduler().scheduleSyncDelayedTask(SignEdit.this, this, 5);
 					logger.info("Waiting for database connection...");
 				}
 			}

@@ -71,11 +71,13 @@ class SignsMap implements Map<Location, String>, Runnable {
 
 		@Override
 		public boolean isCancelled() {
+			if(thread == null) return true;
 			return false;
 		}
 
 		@Override
 		public boolean isDone() {
+			if(thread == null) return true;
 			return !thread.isAlive();
 		}
 		
