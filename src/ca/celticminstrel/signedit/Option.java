@@ -7,7 +7,7 @@ public abstract class Option<T> {
 	protected T def;
 	private static Configuration config;
 	
-	@SuppressWarnings("hiding")
+	//@SuppressWarnings("hiding")
 	protected Option(String node, T def) {
 		this.node = node;
 		this.def = def;
@@ -38,7 +38,8 @@ public abstract class Option<T> {
 }
 
 class OptionBoolean extends Option<Boolean> {
-	@SuppressWarnings("hiding") OptionBoolean(String node, boolean def) {
+	//@SuppressWarnings("hiding") 
+	OptionBoolean(String node, boolean def) {
 		super(node, def);
 	}
 
@@ -49,7 +50,8 @@ class OptionBoolean extends Option<Boolean> {
 }
 
 class OptionString extends Option<String> {
-	@SuppressWarnings("hiding") OptionString(String node, String def) {
+	//@SuppressWarnings("hiding") 
+	OptionString(String node, String def) {
 		super(node, def);
 	}
 
@@ -60,7 +62,8 @@ class OptionString extends Option<String> {
 }
 
 class OptionInteger extends Option<Integer> {
-	@SuppressWarnings("hiding") OptionInteger(String node, int def) {
+	//@SuppressWarnings("hiding") 
+	OptionInteger(String node, int def) {
 		super(node, def);
 	}
 
